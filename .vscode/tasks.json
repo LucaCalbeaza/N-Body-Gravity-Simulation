@@ -8,7 +8,7 @@
       "args": [
         "-g",
         "-std=c++17",
-        "${workspaceFolder}/src/main.cpp",
+        "${workspaceFolder}/src/*.cpp",
         "${workspaceFolder}/src/glad.c",
         "-I${workspaceFolder}/include",
         "-L${workspaceFolder}/lib",
