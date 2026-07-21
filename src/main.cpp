@@ -6,48 +6,23 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "shader.h"
+#include "window.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// Main Class
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+// Main Class
 
 // Window Settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 
 int main() {
-    // Initialize GLFW
-    glfwInit();
-
-    // Let GLFW know version and profile
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // Create GLFW window object, set to context, and check for errors
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "N-Body Orbital Simulation", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    } 
-
-    // Set rendering window to entire screen from (0,0) to (800, 800)
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-
+    // Create Window
+    Window window(SCR_WIDTH, SCR_HEIGHT, "N-Body Orbital Simulation" );
+    
     // Build the Shaders and the shader Program ---------------------
     Shader shader("src/shaders/vertexShader.txt", "src/shaders/fragmentShader.txt");
     
@@ -104,9 +79,9 @@ int main() {
     
 
     // While loop runs while the window remains open
-    while(!glfwWindowShouldClose(window)) {
+    while(!glfwWindowShouldClose(window.getWindow())) {
         // Register Input
-        processInput(window);
+        window.processInput();
 
         // Render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -132,8 +107,7 @@ int main() {
         // ----------
 
         // Swap buffers and poll for events
-        glfwSwapBuffers(window);
-        glfwPollEvents();    
+        window.update();    
     }
 
     // De-allocate Resources
@@ -144,21 +118,6 @@ int main() {
 
 
     // Terminate GLFW
-    glfwTerminate();
+    window.terminate();
     return 0;
-}
-
-
-
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow *window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions;
-    glViewport(0, 0, width, height);
 }
