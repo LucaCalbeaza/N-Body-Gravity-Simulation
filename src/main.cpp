@@ -79,7 +79,7 @@ int main() {
     
 
     // While loop runs while the window remains open
-    while(!glfwWindowShouldClose(window.getWindow())) {
+    while(!glfwWindowShouldClose(window.window)) {
         // Register Input
         window.processInput();
 

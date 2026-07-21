@@ -27,12 +27,7 @@ public:
      * Swap the front and back buffer of the window and then poll for events
      */
     void update();
-
-    /**
-     * Return the window object
-     */
-    GLFWwindow* getWindow();
-    
+   
     /**
      * Process all input: query GLFW whether relevant keys are pressed/released 
      * this frame and react accordingly
