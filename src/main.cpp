@@ -27,21 +27,6 @@ int main() {
     // Build the Shaders and the shader Program ---------------------
     Shader shader("src/shaders/vertexShader.txt", "src/shaders/fragmentShader.txt");
     
-
-    // Vertex Data -----------------------------
-    // Triangles
-    std::vector<float> vertices = {
-     0.0f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f,       // Mid
-    -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f,       // Top Left
-    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,       // Bot Left
-     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,       // Top Right 
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,       // Bot Right
-    };
-    std::vector<unsigned int> indices = {
-        0, 1, 2,   // Triangle 1
-        0, 3, 4    // Triangle 2
-    }; 
-
     glm::vec3 positions[] = {
         glm::vec3( 0.0f,  0.0f,  0.0f), 
         glm::vec3( 0.75f,  0.75f, 0.0f), 
@@ -50,7 +35,11 @@ int main() {
         glm::vec3( 0.75f, -0.75f, 0.0f)
     };
 
-    Mesh mesh(vertices, indices);
+
+    std::vector<float> circleVertices;
+    std::vector<unsigned int> circleIndices;
+    Mesh mesh(circleVertices, circleIndices);
+    mesh.createCircle(0.5f, 100, 1.0f, 0.0f, 0.0f);
     
     // ---------------------------------------
 
