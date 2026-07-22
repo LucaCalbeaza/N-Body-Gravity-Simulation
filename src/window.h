@@ -17,7 +17,7 @@ public:
     GLFWwindow* window;
 
     /**
-     * Windowder Constructor: Creates a window with given width, height
+     * Window Constructor: Creates a window with given width, height
      * and name. Sets the context to this window and the viewport to 
      * match the window dimensions  
      */
