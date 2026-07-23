@@ -4,10 +4,6 @@
 */
 
 #include "body.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <glm/glm.hpp>
 
 Body::Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float mass) {
     this->position = position;

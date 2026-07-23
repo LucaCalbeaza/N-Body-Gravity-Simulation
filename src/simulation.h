@@ -6,10 +6,6 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <vector>
 #include <random>
 #include <cmath>
 
@@ -20,10 +16,6 @@
 #include "window.h"
 #include "mesh.h"
 #include "body.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 class Simulation {
 public:

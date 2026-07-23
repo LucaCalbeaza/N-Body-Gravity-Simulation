@@ -5,17 +5,7 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-
 #include "mesh.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 
 
 Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices) {

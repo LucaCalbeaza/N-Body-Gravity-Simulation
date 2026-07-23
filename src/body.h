@@ -21,12 +21,12 @@ public:
 
     /**
      * Body Constructor: Creates a body with given position, velocity, 
-     * acceleration and mass  
+     * acceleration and mass.  
      */
     Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float mass);
 
     /**
-     * Updates position and velocity over the given time interval dt 
+     * Updates position and velocity over the given time interval dt. 
      */
     void update(float dt);
 

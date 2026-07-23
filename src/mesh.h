@@ -34,19 +34,19 @@ public:
 
     /**
      * Renders the mesh with the given model applied on 
-     * the given shader
+     * the given shader.
      */
     void draw(glm::mat4 model, Shader shader);
 
     /**
      * Sets the vertoces and indices of the mesh to represent 
      * a circle with the given radius, number of vertices and 
-     * RGB color
+     * RGB color.
      */
     void createCircle(float radius, unsigned int numVertices, float red, float green, float blue);
 
     /**
-     * Deletes Buffers and arrays 
+     * Deletes Buffers and arrays.
      */
     void terminate();
 
