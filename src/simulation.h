@@ -12,10 +12,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "shader.h"
-#include "window.h"
-#include "mesh.h"
-#include "body.h"
+#include "graphics/shader.h"
+#include "graphics/window.h"
+#include "graphics/mesh.h"
+#include "physics/body.h"
 
 class Simulation {
 public:
