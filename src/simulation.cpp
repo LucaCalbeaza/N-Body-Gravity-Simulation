@@ -13,7 +13,8 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     mesh(std::vector<float>(), std::vector<unsigned int>()),
     n(n),
     mass(mass),
-    G(G)               {
+    G(G),
+    screenSize(screenWidth)               {
     
     // Time Variables : FPS Update Rate
     dt = 1.0 / fps; 
@@ -64,7 +65,8 @@ void Simulation::run() {
         frameTimeAccumulation += frameTime;
 
         while (frameTimeAccumulation >= dt) {
-            updatePhysics();
+            updatePhysicsBarnesHutTree();
+            //updatePhysicsBruteForce();
             frameTimeAccumulation -= dt;
         }
 
@@ -87,15 +89,31 @@ void Simulation::run() {
     terminate();
 }
 
-void Simulation::updatePhysics() {
+void Simulation::updatePhysicsBruteForce() {
     for (int a = 0; a < stars.size(); a++) {
         for (int b = a + 1; b < stars.size(); b++) {
             if (a != b) {
                 glm::vec3 distance = stars[a].position - stars[b].position;
-                stars[a].acceleration -= ((G * stars[b].mass * glm::normalize(distance)) / (float)pow(glm::length(distance) + minDistance, 2));
-                stars[b].acceleration += ((G * stars[a].mass * glm::normalize(distance)) / (float)pow(glm::length(distance) + minDistance, 2));
+                stars[a].acceleration -= ((G * stars[b].mass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
+                stars[b].acceleration += ((G * stars[a].mass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
             }
         }
+    }
+
+    for (auto& star : stars) {
+        star.update(dt);
+    }
+}
+
+void Simulation::updatePhysicsBarnesHutTree() {
+    BarnesHutTree tree(screenSize);
+
+    for (int i = 0; i < stars.size(); i++) {
+        tree.insert(0, i, stars);
+    }
+
+    for (int i = 0; i < stars.size(); i++) {
+        stars[i].acceleration = tree.computeAcceleration(0, i, stars, 0.5f, G, rSoft);
     }
 
     for (auto& star : stars) {

@@ -16,6 +16,7 @@
 #include "graphics/window.h"
 #include "graphics/mesh.h"
 #include "physics/body.h"
+#include "physics/barnesHutTree.h"
 
 class Simulation {
 public:
@@ -23,6 +24,7 @@ public:
     Window window; 
     Shader shader;
     Mesh mesh;
+    unsigned int screenSize;
 
     // Time Properties
     float dt;
@@ -34,7 +36,7 @@ public:
     unsigned int n;
     float mass;
     float G;
-    const float minDistance = 0.05f;
+    const float rSoft = 0.05f;
 
 
     /**
@@ -65,9 +67,17 @@ private:
 
     /**
      * Updates the acceleration, velocity and position of each star by 
-     * calculating their gravitional interactions. 
+     * calculating their gravitional interactions via a brute force 
+     * summation method.  
      */
-    void updatePhysics();
+    void updatePhysicsBruteForce();
+
+    /**
+     * Updates the acceleration, velocity and position of each star by 
+     * calculating their gravitional interactions via a Barnes-Hut tree
+     * computation. 
+     */
+    void updatePhysicsBarnesHutTree();
 
     /**
      * De-allocates resources and terminates the window
