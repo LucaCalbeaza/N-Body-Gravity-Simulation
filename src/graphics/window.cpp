@@ -6,7 +6,7 @@
 #include "window.h"
 
 
-Window::Window(unsigned int width, unsigned int height, const char* name) {
+Window::Window(unsigned int width, unsigned int height, const char* title) {
     // Initialize GLFW
     glfwInit();
 
@@ -16,7 +16,7 @@ Window::Window(unsigned int width, unsigned int height, const char* name) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Create GLFW window object, set to context, and check for errors
-    window = glfwCreateWindow(width, height, name, NULL, NULL);
+    window = glfwCreateWindow(width, height, title, NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -34,9 +34,10 @@ Window::Window(unsigned int width, unsigned int height, const char* name) {
     glViewport(0, 0, width, height);
 }
 
-void Window::update() {
+void Window::update(const char* title) {
     glfwSwapBuffers(window);
     glfwPollEvents();
+    glfwSetWindowTitle(window, title);
 }
 
 void Window::processInput() {

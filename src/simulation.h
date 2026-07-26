@@ -26,10 +26,13 @@ public:
     Mesh mesh;
     unsigned int screenSize;
 
-    // Time Properties
+    // Time and Frame Count Properties
     float dt;
-    float frameTimeAccumulation;
+    float frameTimeAccumulation = 0.0;
     float lastFrameTime;
+    int fpsFrameCount = 0;
+    float fpsElapsedTime = 0.0f;
+    float currentFPS = 0.0f;
 
     // Physical Properties
     std::vector<Body> stars;

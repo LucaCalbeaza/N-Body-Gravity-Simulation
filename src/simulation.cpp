@@ -18,7 +18,6 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     
     // Time Variables : FPS Update Rate
     dt = 1.0 / fps; 
-    frameTimeAccumulation = 0.0;
     lastFrameTime = glfwGetTime();
     
     // Generate Mesh and Star Data
@@ -64,6 +63,15 @@ void Simulation::run() {
         }
         frameTimeAccumulation += frameTime;
 
+        // FPS Count Calculation
+        fpsFrameCount++;
+        fpsElapsedTime += frameTime;
+        if (fpsElapsedTime >= 0.5f) {
+            currentFPS = fpsFrameCount / fpsElapsedTime;
+            fpsFrameCount = 0;
+            fpsElapsedTime = 0.0f;
+        }
+
         while (frameTimeAccumulation >= dt) {
             updatePhysicsBarnesHutTree();
             //updatePhysicsBruteForce();
@@ -84,7 +92,8 @@ void Simulation::run() {
         }
 
         // Swap buffers and poll for events
-        window.update();    
+        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS);
+        window.update(title.c_str());    
     }
     terminate();
 }

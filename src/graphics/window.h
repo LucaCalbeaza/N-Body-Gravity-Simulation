@@ -21,12 +21,13 @@ public:
      * and name. Sets the context to this window and the viewport to 
      * match the window dimensions.  
      */
-    Window(unsigned int width, unsigned int height, const char* name);
+    Window(unsigned int width, unsigned int height, const char* title);
 
     /**
-     * Swap the front and back buffer of the window and then poll for events.
+     * Swap the front and back buffer of the window and then poll for events. 
+     * Additonally update the window title to display FPS. 
      */
-    void update();
+    void update(const char* title);
    
     /**
      * Process all input: query GLFW whether relevant keys are pressed/released 
