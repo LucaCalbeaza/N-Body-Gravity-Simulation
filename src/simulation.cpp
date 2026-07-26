@@ -29,7 +29,7 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
 }
 
 Mesh Simulation::generateMesh() {
-    mesh.createCircle(0.5f, 100, 1.0f, 1.0f, 1.0f);
+    mesh.createCircle(0.005f, 100, 1.0f, 1.0f, 1.0f);
     return mesh;
 }
 
@@ -87,7 +87,7 @@ void Simulation::run() {
         for(unsigned int i = 0; i < n; i++) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, stars[i].position);
-            model = glm::scale(model, glm::vec3(0.01, 0.01, 0.01));
+            //model = glm::scale(model, glm::vec3(0.01, 0.01, 0.01));
             mesh.draw(model, shader);
         }
 
@@ -115,19 +115,56 @@ void Simulation::updatePhysicsBruteForce() {
 }
 
 void Simulation::updatePhysicsBarnesHutTree() {
-    BarnesHutTree tree(screenSize);
+    glm::vec3 centerOfMass = computeCenterOfMass();
+    std::vector<int> innerBodies;
+    std::vector<int> outerBodies;
 
+    // Split stars into outer and inner lists
     for (int i = 0; i < stars.size(); i++) {
+        glm::vec3 distance = stars[i].position - centerOfMass;
+        if (glm::length(distance) > boundaryRadius) {
+            outerBodies.push_back(i);
+        } else {
+            innerBodies.push_back(i);
+        }
+    }
+    //std::cout << "inner: " << innerBodies.size() << ", outer: " << outerBodies.size() << std::endl;
+
+    float maxX = 0, maxY = 0;
+    for (int index : innerBodies) {
+        maxX = std::max<float>(std::abs(stars[index].position.x), maxX);
+        maxY = std::max<float>(std::abs(stars[index].position.y), maxY);
+    }
+    BarnesHutTree tree(std::max<float>(maxX, maxY) * 1.05f, centerOfMass);
+
+    for (int i : innerBodies) {
         tree.insert(0, i, stars);
     }
 
-    for (int i = 0; i < stars.size(); i++) {
+    for (int i : innerBodies) {
         stars[i].acceleration = tree.computeAcceleration(0, i, stars, 0.5f, G, rSoft);
     }
 
-    for (auto& star : stars) {
-        star.update(dt);
+    for (int i : outerBodies) {
+        glm::vec3 distance = stars[i].position - tree.nodes[0].centerOfMass;
+        stars[i].acceleration -= ((G * tree.nodes[0].totalMass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
     }
+
+    for (int i = 0; i < stars.size(); i++) {
+        stars[i].update(dt);
+    }
+}
+
+glm::vec3 Simulation::computeCenterOfMass() {
+    glm::vec3 momentOfMass = glm::vec3(0.0f, 0.0f, 0.0f);
+    float totalMass = 0; 
+
+    for (Body star : stars) {
+        momentOfMass += star.position * star.mass;
+        totalMass += star.mass;
+    }
+
+    return momentOfMass/totalMass;
 }
 
 void Simulation::terminate() {

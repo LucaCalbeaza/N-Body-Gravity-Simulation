@@ -40,6 +40,7 @@ public:
     float mass;
     float G;
     const float rSoft = 0.05f;
+    float boundaryRadius = 2.0f;
 
 
     /**
@@ -81,6 +82,11 @@ private:
      * computation. 
      */
     void updatePhysicsBarnesHutTree();
+
+    /**
+     * Return the center of mass of the stars in the system 
+     */
+    glm::vec3 computeCenterOfMass();
 
     /**
      * De-allocates resources and terminates the window

@@ -23,8 +23,8 @@ bool BarnesHutTree::Node::isLeaf() {
 
 // BarnesHutTree member functions:
 
-BarnesHutTree::BarnesHutTree(float screenSize) {
-    addNode(glm::vec3(0.0f, 0.0f, 0.0f), screenSize);
+BarnesHutTree::BarnesHutTree(float size, glm::vec3 centerOfMass) {
+    addNode(centerOfMass, size);
     rootIndex = 0;
 }
 

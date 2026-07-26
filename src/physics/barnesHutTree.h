@@ -42,7 +42,7 @@ public:
      * Barnes-Hut Tree Constructor: Constructs an empty tree with
      * the root node as an empty leaf node with size of the screen.
      */
-    BarnesHutTree(float screenSize);
+    BarnesHutTree(float size, glm::vec3 centerOfMass);
 
     /**
      * Adds a new node to the end of the array with the 
