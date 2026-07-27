@@ -15,33 +15,39 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices) {
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO); 
     glGenBuffers(1, &EBO); 
+    glGenBuffers(1, &iVBO); 
     
     // Bind VAO
     glBindVertexArray(VAO);
 
-    // Bind VBO buffer to the vertices & EBO buffer to indices
+    // Bind VBO buffer to vertices and configure attributes
     glBindBuffer(GL_ARRAY_BUFFER, VBO);  
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);  
-
-    // Configure Vertex Positions Attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // Configure Vertex Color Attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Bind EBO to indicies
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    
+    // Bind iVBO to empty and configure attributes
+    glBindBuffer(GL_ARRAY_BUFFER, iVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);  
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindVertexArray(0);
 }
 
-void Mesh::draw(glm::mat4 model, Shader shader) {
+void Mesh::drawInstanced(std::vector<glm::vec3>& positions, Shader shader) {
     glBindVertexArray(VAO);
-    unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, iVBO);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_DYNAMIC_DRAW);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, positions.size());
     glBindVertexArray(0);
 }
 
@@ -73,10 +79,10 @@ void Mesh::createCircle(float radius, unsigned int numVertices, float red, float
         vertices.push_back(blue);
     }
 
-    for (int i = 0; i <= 100; i++) {
+    for (int i = 0; i <= numVertices; i++) {
         indices.push_back(0);
         indices.push_back(i + 1);
-        if (i < 100) { 
+        if (i < numVertices) { 
             indices.push_back(i + 2);
         } else {
             indices.push_back(1);
@@ -93,4 +99,5 @@ void Mesh::terminate() {
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &iVBO);
 }

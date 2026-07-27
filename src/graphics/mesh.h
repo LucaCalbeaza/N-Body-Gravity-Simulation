@@ -24,7 +24,7 @@ public:
     std::vector<unsigned int> indices;
 
     // Buffers and Array
-    unsigned int VBO, VAO, EBO;
+    unsigned int VBO, VAO, EBO, iVBO;
 
     /**
      * Mesh Constructor: Creates a mesh with given vertices and 
@@ -33,10 +33,9 @@ public:
     Mesh(std::vector<float> vertices, std::vector<unsigned int> indices);
 
     /**
-     * Renders the mesh with the given model applied on 
-     * the given shader.
+     * Renders the given mesh at each of the given positions
      */
-    void draw(glm::mat4 model, Shader shader);
+    void drawInstanced(std::vector<glm::vec3>& positions, Shader shader);
 
     /**
      * Sets the vertoces and indices of the mesh to represent 
