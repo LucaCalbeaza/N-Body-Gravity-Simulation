@@ -19,6 +19,11 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     // Time Variables : FPS Update Rate
     dt = 1.0 / fps; 
     lastFrameTime = glfwGetTime();
+
+    // Reserve Star Variables
+    innerBodies.reserve(n);
+    outerBodies.reserve(n);
+    positions.reserve(n);
     
     // Generate Mesh and Star Data
     generateMesh();
@@ -29,7 +34,7 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
 }
 
 Mesh Simulation::generateMesh() {
-    mesh.createCircle(0.005f, 100, 1.0f, 1.0f, 1.0f);
+    mesh.createCircle(0.005f, 10, 1.0f, 1.0f, 1.0f);
     return mesh;
 }
 
@@ -40,7 +45,7 @@ void Simulation::generateStarData() {
 
     for (int i = 0; i < n; i++) {
         glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  0);
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.0f,  0.0f);
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.0f);
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -83,16 +88,15 @@ void Simulation::run() {
         glClear(GL_COLOR_BUFFER_BIT);
         shader.use();
 
-        // Bind VAO and Draw
+        // Bind position data and Draw
+        positions.clear();
         for(unsigned int i = 0; i < n; i++) {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, stars[i].position);
-            //model = glm::scale(model, glm::vec3(0.01, 0.01, 0.01));
-            mesh.draw(model, shader);
+            positions.push_back(stars[i].position);
         }
+        mesh.drawInstanced(positions, shader);
 
         // Swap buffers and poll for events
-        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS);
+        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime);
         window.update(title.c_str());    
     }
     terminate();
@@ -116,8 +120,8 @@ void Simulation::updatePhysicsBruteForce() {
 
 void Simulation::updatePhysicsBarnesHutTree() {
     glm::vec3 centerOfMass = computeCenterOfMass();
-    std::vector<int> innerBodies;
-    std::vector<int> outerBodies;
+    outerBodies.clear();
+    innerBodies.clear();
 
     // Split stars into outer and inner lists
     for (int i = 0; i < stars.size(); i++) {
@@ -128,7 +132,6 @@ void Simulation::updatePhysicsBarnesHutTree() {
             innerBodies.push_back(i);
         }
     }
-    //std::cout << "inner: " << innerBodies.size() << ", outer: " << outerBodies.size() << std::endl;
 
     float maxX = 0, maxY = 0;
     for (int index : innerBodies) {
@@ -147,7 +150,7 @@ void Simulation::updatePhysicsBarnesHutTree() {
 
     for (int i : outerBodies) {
         glm::vec3 distance = stars[i].position - tree.nodes[0].centerOfMass;
-        stars[i].acceleration -= ((G * tree.nodes[0].totalMass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
+        stars[i].acceleration = ((-G * tree.nodes[0].totalMass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
     }
 
     for (int i = 0; i < stars.size(); i++) {

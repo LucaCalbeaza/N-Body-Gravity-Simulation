@@ -36,6 +36,9 @@ public:
 
     // Physical Properties
     std::vector<Body> stars;
+    std::vector<int> innerBodies;
+    std::vector<int> outerBodies;
+    std::vector<glm::vec3> positions;
     unsigned int n;
     float mass;
     float G;
