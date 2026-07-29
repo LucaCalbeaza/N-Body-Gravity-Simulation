@@ -5,6 +5,7 @@
 
 #include "simulation.h"
 #include <iostream>
+#include "omp.h"
 
 
 Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G) :   
@@ -34,14 +35,14 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
 }
 
 Mesh Simulation::generateMesh() {
-    mesh.createCircle(0.005f, 10, 1.0f, 1.0f, 1.0f);
+    mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
     return mesh;
 }
 
 void Simulation::generateStarData() {
     std::random_device randomDevice;
     std::mt19937 gen(randomDevice());
-    std::uniform_real_distribution<float> genRandom(-0.8f, 0.8f);
+    std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
 
     for (int i = 0; i < n; i++) {
         glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  0);
@@ -80,7 +81,6 @@ void Simulation::run() {
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
             updatePhysicsBarnesHutTree();
-            //updatePhysicsBruteForce();
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {
@@ -154,15 +154,18 @@ void Simulation::updatePhysicsBarnesHutTree() {
         tree.insert(0, i, stars);
     }
 
+    #pragma omp parallel for schedule(dynamic, 32)
     for (int i : innerBodies) {
         stars[i].acceleration = tree.computeAcceleration(0, i, stars, 0.5f, G, rSoft);
     }
 
+    #pragma omp parallel for schedule(dynamic, 32)
     for (int i : outerBodies) {
         glm::vec3 distance = stars[i].position - tree.nodes[0].centerOfMass;
         stars[i].acceleration = ((-G * tree.nodes[0].totalMass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
     }
 
+    #pragma omp parallel for schedule(static)
     for (int i = 0; i < stars.size(); i++) {
         stars[i].update(dt);
     }
