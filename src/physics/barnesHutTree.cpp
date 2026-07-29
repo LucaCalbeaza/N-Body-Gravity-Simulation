@@ -23,7 +23,8 @@ bool BarnesHutTree::Node::isLeaf() {
 
 // BarnesHutTree member functions:
 
-BarnesHutTree::BarnesHutTree(float size, glm::vec3 centerOfMass) {
+BarnesHutTree::BarnesHutTree(float size, glm::vec3 centerOfMass, int n) {
+    nodes.reserve(2 * n);
     addNode(centerOfMass, size);
     rootIndex = 0;
 }
@@ -66,7 +67,7 @@ glm::vec3 BarnesHutTree::getChildCentre(glm::vec3 parentCenter, float childSize,
 }
 
 void BarnesHutTree::insert(int nodeIndex, int bodyIndex, std::vector<Body>& bodies) {
-    Body body = bodies[bodyIndex];
+    const Body& body = bodies[bodyIndex];
     
     // Case 1: Node is an empty leaf
     if (nodes[nodeIndex].isLeaf() && nodes[nodeIndex].bodyIndex == -1) {

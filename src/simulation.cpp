@@ -77,9 +77,19 @@ void Simulation::run() {
             fpsElapsedTime = 0.0f;
         }
 
-        while (frameTimeAccumulation >= dt) {
+        int steps = 0;
+        while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
             updatePhysicsBarnesHutTree();
             //updatePhysicsBruteForce();
+            frameTimeAccumulation -= dt;
+            steps++;
+            if (steps == maxStepsPerFrame) {
+                frameTimeAccumulation = 0;
+            }
+        }
+        
+        while (frameTimeAccumulation >= dt) {
+            updatePhysicsBarnesHutTree();
             frameTimeAccumulation -= dt;
         }
 
@@ -138,7 +148,7 @@ void Simulation::updatePhysicsBarnesHutTree() {
         maxX = std::max<float>(std::abs(stars[index].position.x), maxX);
         maxY = std::max<float>(std::abs(stars[index].position.y), maxY);
     }
-    BarnesHutTree tree(std::max<float>(maxX, maxY) * 1.05f, centerOfMass);
+    BarnesHutTree tree(std::max<float>(maxX, maxY) * 1.05f, centerOfMass, n);
 
     for (int i : innerBodies) {
         tree.insert(0, i, stars);
@@ -162,9 +172,9 @@ glm::vec3 Simulation::computeCenterOfMass() {
     glm::vec3 momentOfMass = glm::vec3(0.0f, 0.0f, 0.0f);
     float totalMass = 0; 
 
-    for (Body star : stars) {
-        momentOfMass += star.position * star.mass;
-        totalMass += star.mass;
+    for (int i = 0; i < stars.size(); i++) {
+        momentOfMass += stars[i].position * stars[i].mass;
+        totalMass += stars[i].mass;
     }
 
     return momentOfMass/totalMass;

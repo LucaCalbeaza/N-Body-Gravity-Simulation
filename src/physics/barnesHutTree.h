@@ -41,8 +41,9 @@ public:
     /**
      * Barnes-Hut Tree Constructor: Constructs an empty tree with
      * the root node as an empty leaf node with size of the screen.
+     * Reserves space for n nodes. 
      */
-    BarnesHutTree(float size, glm::vec3 centerOfMass);
+    BarnesHutTree(float size, glm::vec3 centerOfMass, int n);
 
     /**
      * Adds a new node to the end of the array with the 

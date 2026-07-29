@@ -30,6 +30,7 @@ public:
     float dt;
     float frameTimeAccumulation = 0.0;
     float lastFrameTime;
+    const int maxStepsPerFrame = 4;
     int fpsFrameCount = 0;
     float fpsElapsedTime = 0.0f;
     float currentFPS = 0.0f;
