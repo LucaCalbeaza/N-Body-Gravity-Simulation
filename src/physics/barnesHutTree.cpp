@@ -24,7 +24,7 @@ bool BarnesHutTree::Node::isLeaf() {
 // BarnesHutTree member functions:
 
 BarnesHutTree::BarnesHutTree(float size, glm::vec3 centerOfMass, int n) {
-    nodes.reserve(2 * n);
+    nodes.reserve(10 * n);
     addNode(centerOfMass, size);
     rootIndex = 0;
 }

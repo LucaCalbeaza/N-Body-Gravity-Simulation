@@ -162,7 +162,9 @@ void Simulation::updatePhysicsBarnesHutTree() {
     #pragma omp parallel for schedule(dynamic, 32)
     for (int i : outerBodies) {
         glm::vec3 distance = stars[i].position - tree.nodes[0].centerOfMass;
-        stars[i].acceleration = ((-G * tree.nodes[0].totalMass * glm::normalize(distance)) / (float)pow(glm::length(distance) + rSoft, 2));
+        float distanceSqr = glm::dot(distance, distance);
+        float length = std::sqrt(distanceSqr);
+        stars[i].acceleration = ((-G * tree.nodes[0].totalMass * distance / length) / ((length + rSoft) * (length + rSoft)));
     }
 
     #pragma omp parallel for schedule(static)
