@@ -83,6 +83,7 @@ void BarnesHutTree::insert(int nodeIndex, int bodyIndex, std::vector<Body>& bodi
         Body oldBody = bodies[nodes[nodeIndex].bodyIndex];
         unsigned int oldBodyIndex = nodes[nodeIndex].bodyIndex;
 
+        // Prevent tree from from sub diving below size 0.0001f
         if (nodes[nodeIndex].size < 1e-4f) {
             nodes[nodeIndex].centerOfMass = computeCentreOfMass(body.position, nodes[nodeIndex].centerOfMass, body.mass, nodes[nodeIndex].totalMass);
             nodes[nodeIndex].totalMass += body.mass;

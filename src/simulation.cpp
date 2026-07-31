@@ -36,10 +36,13 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
 }
 
 void Simulation::generateStarData() {
+    // Create RNG device set between [-1.0f, 1.0f]
     std::random_device randomDevice;
     std::mt19937 gen(randomDevice());
     std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
 
+    // Generate n stars with random initial {x,y} positions between
+    // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
         glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  0);
         glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.0f);
@@ -50,6 +53,7 @@ void Simulation::generateStarData() {
 }
 
 Mesh Simulation::generateMesh() {
+    // Create circle mesh and load the star data into the mesh SSBO
     mesh.createCircle(0.0025f, 10, 1.0f, 1.0f, 1.0f);
     mesh.loadBodies(stars);
     return mesh;
@@ -80,6 +84,9 @@ void Simulation::run() {
             fpsElapsedTime = 0.0f;
         }
 
+        // Update the star data. Incase of frame drops update the star data 
+        // multiple times to account for loss. Limit set to maxStepsPerFrame
+        // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
             //updatePhysicsBarnesHutTree();
@@ -105,7 +112,7 @@ void Simulation::run() {
 
         mesh.drawSSBO();
 
-        // Swap buffers and poll for events
+        // Swap buffers and update window title
         std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime);
         window.update(title.c_str());    
     }
@@ -113,6 +120,9 @@ void Simulation::run() {
 }
 
 void Simulation::updatePhysicsBruteForce() {
+    // For each star directly sum up the gravitational acceleration from
+    // all other stars. Additionaly update the gravitional acceleration 
+    // on the other star to prevent duplicate computations. 
     for (int a = 0; a < stars.size(); a++) {
         for (int b = a + 1; b < stars.size(); b++) {
             if (a != b) {
@@ -123,6 +133,7 @@ void Simulation::updatePhysicsBruteForce() {
         }
     }
 
+    // Update the data state of each star
     for (auto& star : stars) {
         star.update(dt);
     }
@@ -143,6 +154,9 @@ void Simulation::updatePhysicsBarnesHutTree() {
         }
     }
 
+    // Find the inner star with the max x or y value from the center. Construct 
+    // the Barnes-hut tree around the center of mass with that max value as the 
+    // size with a minor 5% increment.  
     float maxX = 0, maxY = 0;
     for (int index : innerBodies) {
         maxX = std::max<float>(std::abs(stars[index].position.x), maxX);
@@ -150,15 +164,21 @@ void Simulation::updatePhysicsBarnesHutTree() {
     }
     BarnesHutTree tree(std::max<float>(maxX, maxY) * 1.05f, centerOfMass, n);
 
+    // Insert each inner star into the tree
     for (int i : innerBodies) {
         tree.insert(0, i, stars);
     }
 
+    // Following 3 computations are parallelized over multi threads using OpenMP
+
+    // Compute the acceleration of each inner body using the tree approximation
     #pragma omp parallel for schedule(dynamic, 32)
     for (int i : innerBodies) {
         stars[i].acceleration = tree.computeAcceleration(0, i, stars, 0.5f, G, rSoft);
     }
 
+    // Compute the acceleration of each outer body by treating the inner bodies
+    // as a single point mass 
     #pragma omp parallel for schedule(dynamic, 32)
     for (int i : outerBodies) {
         glm::vec3 distance = stars[i].position - tree.nodes[0].centerOfMass;
@@ -167,6 +187,7 @@ void Simulation::updatePhysicsBarnesHutTree() {
         stars[i].acceleration = ((-G * tree.nodes[0].totalMass * distance / length) / ((length + rSoft) * (length + rSoft)));
     }
 
+    // Update the data state of each star
     #pragma omp parallel for schedule(static)
     for (int i = 0; i < stars.size(); i++) {
         stars[i].update(dt);
@@ -174,12 +195,18 @@ void Simulation::updatePhysicsBarnesHutTree() {
 }
 
 void Simulation::updatePhysicsComputeShader() {
+    // Active the compute shader
     computeShader.use();
+
+    // Initialize the computer shader with the uniform values 
+    // of the given physcial terms: n, G, rSoft, dt
     glUniform1i(glGetUniformLocation(computeShader.ID, "numBodies"), n);
     glUniform1f(glGetUniformLocation(computeShader.ID, "G"), G);
     glUniform1f(glGetUniformLocation(computeShader.ID, "rSoft"), rSoft);
     glUniform1f(glGetUniformLocation(computeShader.ID, "dt"), dt);
 
+    // Bind the mesh SSBO, compute the number of 1x256 workgroups, 
+    // and execute the compute shader computation on the GPU
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mesh.SSBO);
     unsigned int numGroups = (n + 255) / 256; 
     glDispatchCompute(numGroups, 1, 1);
@@ -189,6 +216,7 @@ void Simulation::updatePhysicsComputeShader() {
 }
 
 glm::vec3 Simulation::computeCenterOfMass() {
+    // Calculate the center of mass of all the stars
     glm::vec3 momentOfMass = glm::vec3(0.0f, 0.0f, 0.0f);
     float totalMass = 0; 
 
