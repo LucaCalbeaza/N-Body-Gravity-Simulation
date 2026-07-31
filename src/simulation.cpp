@@ -11,7 +11,8 @@
 Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G) :   
     window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
     shader("src/shaders/vertexShader.txt", "src/shaders/fragmentShader.txt"),
-    mesh(std::vector<float>(), std::vector<unsigned int>()),
+    computeShader("src/shaders/computeShaderBruteForce.txt"),
+    mesh(std::vector<float>(), std::vector<unsigned int>(), n),
     n(n),
     mass(mass),
     G(G),
@@ -27,16 +28,11 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     positions.reserve(n);
     
     // Generate Mesh and Star Data
-    generateMesh();
     generateStarData();
+    generateMesh();
 
     // Run Simulation
     run();
-}
-
-Mesh Simulation::generateMesh() {
-    mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
-    return mesh;
 }
 
 void Simulation::generateStarData() {
@@ -51,6 +47,12 @@ void Simulation::generateStarData() {
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
     }
+}
+
+Mesh Simulation::generateMesh() {
+    mesh.createCircle(0.0025f, 10, 1.0f, 1.0f, 1.0f);
+    mesh.loadBodies(stars);
+    return mesh;
 }
 
 void Simulation::run() {
@@ -80,17 +82,13 @@ void Simulation::run() {
 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            updatePhysicsBarnesHutTree();
+            //updatePhysicsBarnesHutTree();
+            updatePhysicsComputeShader();
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {
                 frameTimeAccumulation = 0;
             }
-        }
-        
-        while (frameTimeAccumulation >= dt) {
-            updatePhysicsBarnesHutTree();
-            frameTimeAccumulation -= dt;
         }
 
         // Render and active shader program
@@ -99,11 +97,13 @@ void Simulation::run() {
         shader.use();
 
         // Bind position data and Draw
-        positions.clear();
-        for(unsigned int i = 0; i < n; i++) {
-            positions.push_back(stars[i].position);
-        }
-        mesh.drawInstanced(positions, shader);
+        // positions.clear();
+        // for(unsigned int i = 0; i < n; i++) {
+        //     positions.push_back(stars[i].position);
+        // }
+        // mesh.drawInstanced(positions, shader);
+
+        mesh.drawSSBO();
 
         // Swap buffers and poll for events
         std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime);
@@ -173,6 +173,21 @@ void Simulation::updatePhysicsBarnesHutTree() {
     }
 }
 
+void Simulation::updatePhysicsComputeShader() {
+    computeShader.use();
+    glUniform1i(glGetUniformLocation(computeShader.ID, "numBodies"), n);
+    glUniform1f(glGetUniformLocation(computeShader.ID, "G"), G);
+    glUniform1f(glGetUniformLocation(computeShader.ID, "rSoft"), rSoft);
+    glUniform1f(glGetUniformLocation(computeShader.ID, "dt"), dt);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mesh.SSBO);
+    unsigned int numGroups = (n + 255) / 256; 
+    glDispatchCompute(numGroups, 1, 1);
+
+    // Compute writes must finish before drawing
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+}
+
 glm::vec3 Simulation::computeCenterOfMass() {
     glm::vec3 momentOfMass = glm::vec3(0.0f, 0.0f, 0.0f);
     float totalMass = 0; 
@@ -189,6 +204,7 @@ void Simulation::terminate() {
     // De-allocate Resources
     mesh.terminate();
     shader.destroy();
+    computeShader.destroy();
 
     // Terminate GLFW
     window.terminate();

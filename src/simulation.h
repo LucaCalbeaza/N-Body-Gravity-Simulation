@@ -23,6 +23,7 @@ public:
     // Graphic Properties
     Window window; 
     Shader shader;
+    Shader computeShader;
     Mesh mesh;
     unsigned int screenSize;
 
@@ -86,6 +87,13 @@ private:
      * computation. 
      */
     void updatePhysicsBarnesHutTree();
+
+    /**
+     * Updates the acceleration, velocity and position of each star by 
+     * calculating their gravitional interactions via the computation 
+     * shader. 
+     */
+    void updatePhysicsComputeShader();
 
     /**
      * Return the center of mass of the stars in the system 
