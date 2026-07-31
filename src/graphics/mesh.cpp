@@ -7,15 +7,27 @@
 #include <math.h>
 #include "mesh.h"
 
+// Mesh Body Functions:
 
-Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices) {
+Mesh::MeshBody::MeshBody(const Body& body) {
+    this->position = glm::vec4(body.position, body.mass);
+    this->velocity = glm::vec4(body.velocity, 0.0f);
+    this->acceleration = glm::vec4(body.acceleration, 0.0f);
+}
+
+
+// Mesh Functions:
+
+Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n) {
     this->vertices = vertices;
     this->indices = indices;
+    this->n = n;
 
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO); 
     glGenBuffers(1, &EBO); 
     glGenBuffers(1, &iVBO); 
+    glGenBuffers(1, &SSBO);
     
     // Bind VAO
     glBindVertexArray(VAO);
@@ -33,11 +45,18 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
     
     // Bind iVBO to empty and configure attributes
-    glBindBuffer(GL_ARRAY_BUFFER, iVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, SSBO);  
+    //glBindBuffer(GL_ARRAY_BUFFER, iVBO); // Using CPU position data
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);  
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshBody), (void*)0);
+    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // Using CPU position data
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
+
+    // Bind SSBO
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, n * 3 * sizeof(glm::vec4), nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, SSBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindVertexArray(0);
@@ -48,6 +67,25 @@ void Mesh::drawInstanced(std::vector<glm::vec3>& positions, Shader shader) {
     glBindBuffer(GL_ARRAY_BUFFER, iVBO);
     glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_DYNAMIC_DRAW);
     glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, positions.size());
+    glBindVertexArray(0);
+}
+
+void Mesh::loadBodies(const std::vector<Body>& bodies) {
+    std::vector<MeshBody> meshBodies;
+    meshBodies.reserve(bodies.size());
+
+    for (const Body& body : bodies) {
+        MeshBody mb(body);
+        meshBodies.push_back(mb);
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);   
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, meshBodies.size() * sizeof(MeshBody), meshBodies.data()); 
+}
+
+void Mesh::drawSSBO() {
+    glBindVertexArray(VAO);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, n);
     glBindVertexArray(0);
 }
 
