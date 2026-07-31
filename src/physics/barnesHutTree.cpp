@@ -24,7 +24,7 @@ bool BarnesHutTree::Node::isLeaf() {
 // BarnesHutTree member functions:
 
 BarnesHutTree::BarnesHutTree(float size, glm::vec3 centerOfMass, int n) {
-    nodes.reserve(2 * n);
+    nodes.reserve(10 * n);
     addNode(centerOfMass, size);
     rootIndex = 0;
 }
@@ -83,6 +83,7 @@ void BarnesHutTree::insert(int nodeIndex, int bodyIndex, std::vector<Body>& bodi
         Body oldBody = bodies[nodes[nodeIndex].bodyIndex];
         unsigned int oldBodyIndex = nodes[nodeIndex].bodyIndex;
 
+        // Prevent tree from from sub diving below size 0.0001f
         if (nodes[nodeIndex].size < 1e-4f) {
             nodes[nodeIndex].centerOfMass = computeCentreOfMass(body.position, nodes[nodeIndex].centerOfMass, body.mass, nodes[nodeIndex].totalMass);
             nodes[nodeIndex].totalMass += body.mass;

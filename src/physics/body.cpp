@@ -13,6 +13,8 @@ Body::Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float
 }
 
 void Body::update(float dt) {
+    // Update velocity and position by dt time interval. Reset 
+    // acceleration to 0 vector afterwards. 
     velocity += acceleration * dt; 
     position += velocity * dt;
     acceleration = glm::vec3(0.0f, 0.0f, 0.0f);
