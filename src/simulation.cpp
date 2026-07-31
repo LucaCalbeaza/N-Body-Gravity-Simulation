@@ -103,7 +103,7 @@ void Simulation::run() {
         glClear(GL_COLOR_BUFFER_BIT);
         shader.use();
 
-        // Bind position data and Draw
+        // Bind position data and Draw | Only needed when using CPU computation
         // positions.clear();
         // for(unsigned int i = 0; i < n; i++) {
         //     positions.push_back(stars[i].position);
@@ -200,7 +200,7 @@ void Simulation::updatePhysicsComputeShader() {
 
     // Initialize the computer shader with the uniform values 
     // of the given physcial terms: n, G, rSoft, dt
-    glUniform1i(glGetUniformLocation(computeShader.ID, "numBodies"), n);
+    glUniform1i(glGetUniformLocation(computeShader.ID, "n"), n);
     glUniform1f(glGetUniformLocation(computeShader.ID, "G"), G);
     glUniform1f(glGetUniformLocation(computeShader.ID, "rSoft"), rSoft);
     glUniform1f(glGetUniformLocation(computeShader.ID, "dt"), dt);

@@ -46,14 +46,19 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
     
-    // Bind iVBO to empty and configure attributes
-    glBindBuffer(GL_ARRAY_BUFFER, SSBO);  // Using GPU position data
-    //glBindBuffer(GL_ARRAY_BUFFER, iVBO); // Using CPU position data
+    // SSBO Instance Rendering Initilzation | Used only for GPU computation
+    glBindBuffer(GL_ARRAY_BUFFER, SSBO);
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);  
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshBody), (void*)0);  // Using GPU position data
-    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0); // Using CPU position data
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshBody), (void*)0);  
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
+
+    // iVBO Instance Rendering Initlization | Using only for CPU computation
+    // glBindBuffer(GL_ARRAY_BUFFER, iVBO); 
+    // glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);  
+    // glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    // glEnableVertexAttribArray(2);
+    // glVertexAttribDivisor(2, 1);
 
     // Bind SSBO
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);

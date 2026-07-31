@@ -11,7 +11,7 @@ layout(std430, binding = 0) buffer Bodies {
     shaderBody bodies[];
 };
 
-uniform int numBodies;
+uniform int n;
 uniform float G;
 uniform float rSoft;
 uniform float dt;
@@ -19,7 +19,7 @@ uniform float dt;
 void main() {
     uint i = gl_GlobalInvocationID.x;
     
-    if (i >= uint(numBodies)) {
+    if (i >= uint(n)) {
         return;
     }
 
@@ -27,7 +27,7 @@ void main() {
     vec3 accelerationI = vec3(0.0);
 
     // Calculate Acceleration
-    for (int j = 0; j < uint(numBodies); j++) {
+    for (int j = 0; j < uint(n); j++) {
         if (i == j) {
             continue;
         }
