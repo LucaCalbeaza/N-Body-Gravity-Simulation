@@ -14,10 +14,18 @@ public:
     unsigned int ID;
 
     /**
-     * Shader Constructor: Creates shader program from the 
-     * file path of the given vertex shader and fragment shader. 
+     * Shader Constructor: Creates a shader program from the 
+     * file path of the given vertex shader and fragment shader 
+     * that incorporates a vertex and fragment shader program. 
      */
     Shader(const char* vertexPath, const char* fragmentPath);
+
+    /**
+     * Shader Constructor: Creates shader program from the 
+     * file path of the given compute shader that incorporates 
+     * a compute shader program.  
+     */
+    Shader(const char* computePath);
 
     /**
      * Active shader program.
