@@ -10,8 +10,8 @@
 
 Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G) :   
     window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
-    shader("src/shaders/vertexShader.txt", "src/shaders/fragmentShader.txt"),
-    computeShader("src/shaders/computeShaderBruteForce.txt"),
+    shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
+    computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
     mesh(std::vector<float>(), std::vector<unsigned int>(), n),
     n(n),
     mass(mass),
@@ -54,7 +54,7 @@ void Simulation::generateStarData() {
 
 Mesh Simulation::generateMesh() {
     // Create circle mesh and load the star data into the mesh SSBO
-    mesh.createCircle(0.0025f, 10, 1.0f, 1.0f, 1.0f);
+    mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
     mesh.loadBodies(stars);
     return mesh;
 }
