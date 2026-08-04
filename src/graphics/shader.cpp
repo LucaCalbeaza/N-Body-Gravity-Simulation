@@ -93,11 +93,12 @@ Shader::Shader(const char* computePath) {
     // Retrieve source code for the compute shaders ----------
     std::string computeCode;
     std::ifstream computeFile;
+    
 
     // Allow ifstream objects to throw exceptions
     computeFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
     try {
-        // 1. Read Vertex Shader
+        // 1. Read Compute Shader
         computeFile.open(computePath);
         std::stringstream computeStream;
         computeStream << computeFile.rdbuf();
@@ -116,7 +117,81 @@ Shader::Shader(const char* computePath) {
     int success;
     char infoLog[512];
 
-    // Vertex Shader
+    // Compute Shader
+    computeShader = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(computeShader, 1, &computeShaderSource, NULL);
+    glCompileShader(computeShader);
+    // Check for Compute Shader compile errors
+    glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
+    if(!success) {
+        glGetShaderInfoLog(computeShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Shader Program
+    ID = glCreateProgram();
+    glAttachShader(ID, computeShader);
+    glLinkProgram(ID);
+    // Check for Shader Program linking errors
+    glGetProgramiv(ID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(ID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Delete Linked Shader
+    glDeleteShader(computeShader);
+}
+
+Shader::Shader(const char* computePath, const char* commonPath, bool useCommon) {
+    // Retrieve source code for the compute shaders ----------
+    std::string computeCode;
+    std::string commonCode;
+    std::ifstream computeFile;
+    std::ifstream commonFile;
+    
+
+    // Allow ifstream objects to throw exceptions
+    computeFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    commonFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    try {
+        // 1. Read Compute Shader Shader
+        computeFile.open(computePath);
+        std::stringstream computeStream;
+        computeStream << computeFile.rdbuf();
+        computeFile.close();
+        computeCode = computeStream.str();
+
+        // 2. Read Common File
+        commonFile.open(commonPath);
+        std::stringstream commonStream;
+        commonStream << commonFile.rdbuf();
+        commonFile.close();
+        commonCode = commonStream.str();
+    } catch (std::ifstream::failure& exception) {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl; 
+    }
+
+    // Splice Common with the Compute Shader
+    size_t versionEnd = computeCode.find('\n');
+    if (versionEnd == std::string::npos) {
+        // No newline in the file at all 
+        computeCode = computeCode + "\n" + commonCode;
+    }
+    versionEnd += 1; // keep the newline itself with the #version line
+    std::string versionLine = computeCode.substr(0, versionEnd);
+    std::string body = computeCode.substr(versionEnd);
+    computeCode = versionLine + commonCode + "\n" + body;
+
+    const char* computeShaderSource = computeCode.c_str();
+    // --------------------------------------------------------------
+
+    // Compile Shader ----------------------------------------------
+    unsigned int computeShader;
+    int success;
+    char infoLog[512];
+
+    // Compute Shader
     computeShader = glCreateShader(GL_COMPUTE_SHADER);
     glShaderSource(computeShader, 1, &computeShaderSource, NULL);
     glCompileShader(computeShader);

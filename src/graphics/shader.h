@@ -28,6 +28,15 @@ public:
     Shader(const char* computePath);
 
     /**
+     * Shader Constructor: Creates a shader program from the 
+     * file path given by the compute shader  which attaches 
+     * the declerations from the file given by the common file 
+     * path onto the top of the compute shader. Intended for 
+     * use where multiple compute shaders are used consecutively. 
+     */
+    Shader(const char* computePath, const char* commonPath, bool useCommon);
+
+    /**
      * Active shader program.
      */
     void use();
