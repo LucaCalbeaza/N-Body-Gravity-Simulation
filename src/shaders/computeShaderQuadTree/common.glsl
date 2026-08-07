@@ -12,17 +12,20 @@ struct GpuNode {
     int rangeStart;         // minimum index of node range
     int rangeEnd;           // maximum index of node range
     int checkInCount;       // used during COM reduction
+    int childCount;          // number of children
 };
 
-layout(std430, binding = 0) buffer Bodies      { shaderBody bodies[]; };
-layout(std430, binding = 1) buffer SortedIndex { uint sortedIdx[]; };     
-layout(std430, binding = 2) buffer MortonCodes { uint mortonCode[]; };
-layout(std430, binding = 3) buffer Nodes       { GpuNode nodes[]; };
-layout(std430, binding = 4) buffer NodeCounter { uint nextFreeNode; };    
-layout(std430, binding = 5) buffer BoundsBuf   { vec4 sceneBounds; };
+layout(std430, binding = 0) buffer Bodies      { shaderBody bodies[]; };            // shaderBodies Buffer
+layout(std430, binding = 1) buffer SortedIndex { uint sortedIdx[]; };               // Z-Order curve sorted mortonCode Buffer
+layout(std430, binding = 2) buffer MortonCodes { uint mortonCode[]; };              // Unsorted mortonCode Buffer generated from shaderBodies
+layout(std430, binding = 3) buffer Nodes       { GpuNode nodes[]; };                // GpuNodes Buffer
+layout(std430, binding = 4) buffer NodeCounter { uint nextFreeNode; };              // Next available node index from Nodes buffer 
+layout(std430, binding = 5) buffer BoundsBuf   { vec4 sceneBounds; };               // Final min/max scene bounds from step 2
+layout(std430, binding = 6) buffer PartialBounds { vec4 partialBounds[]; };         // List of min/max bounds from step 1
 
-// Ping-pong "active node" lists — one holds the nodes to process this level,
-// the other collects the children created for the next level.
-layout(std430, binding = 6) buffer ActiveA { int activeA[]; };
-layout(std430, binding = 7) buffer ActiveB { int activeB[]; };
-layout(std430, binding = 8) buffer ActiveCounts { uint countIn; uint countOut; };
+layout(std430, binding = 7) buffer ActiveA { int activeA[]; };                      // ActiveA and ActiveB alternate between each buffer holding the
+layout(std430, binding = 8) buffer ActiveB { int activeB[]; };                      // indexes of the current level and the next level
+layout(std430, binding = 9) buffer ActiveCounts { uint countIn; uint countOut; };   // CountIn: number of nodes on current level; CountOut: number of nodes on next level
+
+layout(std430, binding = 10) buffer LeafNode { int leafNode[]; };                   // List of indexes to leaf nodes
+layout(std430, binding = 11) buffer NodeParent { int nodeParent[]; };               // Maps indexes from Nodes to their parent index within Nodes
