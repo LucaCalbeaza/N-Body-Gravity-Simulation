@@ -9,8 +9,9 @@ uniform float rSoft;
 uniform float dt;
 
 void main() {
-    uint i = gl_GlobalInvocationID.x;
-    if (i >= n) return;
+    uint threadID = gl_GlobalInvocationID.x;
+    if (threadID >= uint(n)) return;
+    uint i = sortedIdx[threadID];
 
     // Get body position and set acceleration to 0
     vec3 posI = bodies[i].position.xyz;

@@ -6,12 +6,20 @@
 #include "simulation.h"
 #include <iostream>
 #include "omp.h"
+#include "quadTreePipelineTest.h"
 
 
 Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G) :   
     window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
-    computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
+    computeShader("src/shaders/computeShaderBruteForce.glsl"),
+    boundingBoxFirstStepShader("src/shaders/computeShaderQuadTree/boundingBoxFirstStep.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+    boundingBoxSecondStepShader("src/shaders/computeShaderQuadTree/boundingBoxSecondStep.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+    mortonCodeGenerationShader("src/shaders/computeShaderQuadTree/mortonCodeGeneration.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+    bitonicSortShader("src/shaders/computeShaderQuadTree/bitonicSort.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+    quadTreeBuildShader("src/shaders/computeShaderQuadTree/quadTreeBuild.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+    centerOfMassReductionShader("src/shaders/computeShaderQuadTree/centerOfMassReduction.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+    accelerationComputationShader("src/shaders/computeShaderQuadTree/accelerationComputation.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
     mesh(std::vector<float>(), std::vector<unsigned int>(), n),
     n(n),
     mass(mass),
@@ -30,6 +38,8 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     // Generate Mesh and Star Data
     generateStarData();
     generateMesh();
+    mesh.loadBodies(stars);
+    mesh.initBarnesHutTree();
 
     // Run Simulation
     run();
@@ -55,7 +65,6 @@ void Simulation::generateStarData() {
 Mesh Simulation::generateMesh() {
     // Create circle mesh and load the star data into the mesh SSBO
     mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
-    mesh.loadBodies(stars);
     return mesh;
 }
 
@@ -89,8 +98,8 @@ void Simulation::run() {
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            //updatePhysicsBarnesHutTree();
-            updatePhysicsComputeShader();
+            updatePhysicsBarnesHutTreeComputeShader(0.5f);
+            //updatePhysicsBruteForceComputeShader();
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {
@@ -194,7 +203,7 @@ void Simulation::updatePhysicsBarnesHutTree() {
     }
 }
 
-void Simulation::updatePhysicsComputeShader() {
+void Simulation::updatePhysicsBruteForceComputeShader() {
     // Active the compute shader
     computeShader.use();
 
@@ -212,6 +221,117 @@ void Simulation::updatePhysicsComputeShader() {
     glDispatchCompute(numGroups, 1, 1);
 
     // Compute writes must finish before drawing
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+}
+
+void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
+    unsigned int numGroups = (n + 255) / 256;
+
+    // Bounding Box First Step
+    boundingBoxFirstStepShader.use();
+    glUniform1i(glGetUniformLocation(boundingBoxFirstStepShader.ID, "n"), n);
+    glDispatchCompute(numGroups, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    // Bounding Box Second Step
+    boundingBoxSecondStepShader.use();
+    glUniform1i(glGetUniformLocation(boundingBoxSecondStepShader.ID, "numGroups"), numGroups);
+    glDispatchCompute(1, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);    
+
+    // Compoute totalSize and padded groups
+    unsigned int totalSize = 1;
+    while (totalSize < n) {
+        totalSize <<= 1;
+    }
+    unsigned int numGroupsPadded = (totalSize + 255) / 256;
+
+    // Generate Morton Code
+    mortonCodeGenerationShader.use();
+    glUniform1i(glGetUniformLocation(mortonCodeGenerationShader.ID, "n"), n);
+    glUniform1ui(glGetUniformLocation(mortonCodeGenerationShader.ID, "totalSize"), totalSize);
+    glDispatchCompute(numGroupsPadded, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);   
+
+    // Bitonic Sort
+    bitonicSortShader.use();
+    glUniform1i(glGetUniformLocation(bitonicSortShader.ID, "n"), n);
+    GLint blockSizeLocation = glGetUniformLocation(bitonicSortShader.ID, "blockSize");
+    GLint stepSizeLocation = glGetUniformLocation(bitonicSortShader.ID, "stepSize");
+    GLint totalSizeLocation = glGetUniformLocation(bitonicSortShader.ID, "totalSize");
+    
+    glUniform1ui(totalSizeLocation, totalSize);
+    for (unsigned int blockSize = 2; blockSize <= totalSize; blockSize <<= 1) {
+        for (unsigned int stepSize = blockSize >> 1; stepSize > 0; stepSize >>= 1) {
+            glUniform1ui(blockSizeLocation, blockSize);
+            glUniform1ui(stepSizeLocation, stepSize);
+            glDispatchCompute(numGroupsPadded, 1, 1);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT); 
+        }
+    }
+
+    // Initialize tree root Node: 
+    float sceneBounds[4];
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.scenceBoundsBuf);
+    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(sceneBounds), sceneBounds);
+    mesh.resetBarnesHutTree(sceneBounds);
+
+
+    // Quad Tree Build
+    quadTreeBuildShader.use();
+    GLint levelLoc = glGetUniformLocation(quadTreeBuildShader.ID, "level");
+    int maxLevel = 16; 
+    GLuint activeBuffer = mesh.activeABuf;
+    GLuint nextBuffer = mesh.activeBBuf;
+    
+    for (int level = 0; level < maxLevel; level++) {
+        // Bind buffers
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, activeBuffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, nextBuffer);
+
+        // Set the uniform value, compute the number of GPU workgroups 
+        // needed and than compute. 
+        glUniform1i(levelLoc, level);
+        unsigned int numGroupsLevel = (n + 63) / 64;
+        glDispatchCompute(numGroupsLevel, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        // Find the number of nodes on the current level and the next level
+        uint32_t counts[2];
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.activeCountsBuf);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(counts), counts);
+        uint32_t countOut = counts[1];
+        // If there are no nodes on the next level exit the loop
+        if (countOut == 0) {
+            break;
+        }
+
+        // Swap buffers and prepare for next level
+        std::swap(activeBuffer, nextBuffer);
+        uint32_t nextCounts[2] = {countOut, 0u};
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(nextCounts), nextCounts);
+    }
+
+    // Reset Buffer A as the default active buffer
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, mesh.activeABuf);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, mesh.activeBBuf);
+
+    // Center of Mass Reduction
+    centerOfMassReductionShader.use();
+    glUniform1i(glGetUniformLocation(centerOfMassReductionShader.ID, "n"), n);
+    glDispatchCompute(numGroups, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+    // Acceleration Computation & Body Update
+    accelerationComputationShader.use();
+    glUniform1i(glGetUniformLocation(accelerationComputationShader.ID, "n"), n);
+    glUniform1i(glGetUniformLocation(accelerationComputationShader.ID, "rootIndex"), 0);
+    glUniform1f(glGetUniformLocation(accelerationComputationShader.ID, "theta"), theta);
+    glUniform1f(glGetUniformLocation(accelerationComputationShader.ID, "G"), G);
+    glUniform1f(glGetUniformLocation(accelerationComputationShader.ID, "rSoft"), rSoft);
+    glUniform1f(glGetUniformLocation(accelerationComputationShader.ID, "dt"), dt);
+    glDispatchCompute(numGroups, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 }
 

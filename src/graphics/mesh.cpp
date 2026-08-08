@@ -69,6 +69,15 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     glBindVertexArray(0);
 }
 
+GLuint Mesh::makeSSBO(size_t byteSize, const void* data, GLuint bindingLocation) {
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, byteSize, data, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingLocation, buffer);
+    return buffer;
+}
+
 void Mesh::drawInstanced(std::vector<glm::vec3>& positions, Shader shader) {
     // Draw mesh in instanced positions obtained from the positions vector
     glBindVertexArray(VAO);
@@ -92,6 +101,74 @@ void Mesh::loadBodies(const std::vector<Body>& bodies) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);   
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, meshBodies.size() * sizeof(MeshBody), meshBodies.data()); 
 }
+
+void Mesh::initBarnesHutTree() {
+    // Find the total padded size needed (first 2^i < n), and subsequently 
+    // the number of GPU thread groups needed. 
+    totalSizePadded = 1; 
+    while (totalSizePadded < n) {
+        totalSizePadded <<= 1;
+    }
+    numGroupsPadded = (totalSizePadded + 255) / 256;
+
+    // Provide extra headroom for the max number of nodes. n * 2-4 should 
+    // typically be enough, so choose 8 to be safe. 
+    maxNodes = n * 8;
+
+    // Create and bind SSBO ID object to buffer variables. Buffer for the 
+    // bodies buffer was already bound in the loadBodies() function. 
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, SSBO);
+    sortedIdxBuf = makeSSBO(totalSizePadded * sizeof(uint32_t), nullptr, 1);
+    mortonCodeBuf = makeSSBO(n * sizeof(uint32_t), nullptr, 2);
+    nodesBuf = makeSSBO(maxNodes * sizeof(GpuNodeCPU), nullptr, 3);
+    nextFreeNodeBuf = makeSSBO(sizeof(uint32_t), nullptr, 4);
+    scenceBoundsBuf = makeSSBO(sizeof(float) * 4, nullptr, 5);
+    partialBoundsBuf = makeSSBO(((n + 255) / 256) * sizeof(float) * 4, nullptr, 6);
+    activeABuf = makeSSBO(maxNodes * sizeof(int32_t), nullptr, 7);
+    activeBBuf = makeSSBO(maxNodes * sizeof(int32_t), nullptr, 8);
+    activeCountsBuf = makeSSBO(sizeof(uint32_t) * 2, nullptr, 9);
+    leafNodeBuf = makeSSBO(n * sizeof(int32_t), nullptr, 10);
+    nodeParentBuf = makeSSBO(maxNodes * sizeof(int32_t), nullptr, 11);
+}
+
+void Mesh::resetBarnesHutTree(const float sceneBounds[4]) {
+    // Create the root node with the given sceneBounds, the center
+    // of mass and mass are initialized to 0 before any bodies are added. 
+    GpuNodeCPU root{};
+    // (x,y,z) positions and size
+    root.centerAndSize[0] = (sceneBounds[0] + sceneBounds[2]) * 0.5f; 
+    root.centerAndSize[1] = (sceneBounds[1] + sceneBounds[3]) * 0.5f; 
+    root.centerAndSize[2] = 0.0f; 
+    root.centerAndSize[3] = std::max(sceneBounds[2] - sceneBounds[0], sceneBounds[3] - sceneBounds[1]) * 1.01f;
+    // Rest
+    root.bodyIndex = -1;
+    root.rangeStart = 0;
+    root.rangeEnd = n;
+    root.checkInCount = 0;
+    root.childCount = 0;
+
+    // Reset buffers
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, nodesBuf);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GpuNodeCPU), &root);
+
+    uint32_t nextFreeNodeInit = 1; 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextFreeNodeBuf);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(uint32_t), &nextFreeNodeInit);
+
+    int32_t nodeParentRoot = -1;
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, nodeParentBuf);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int32_t), &nodeParentRoot);
+
+    int32_t rootActive = 0;
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, activeABuf);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(int32_t), &rootActive);
+
+    uint32_t countsInit[2] = {1u, 0u}; 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, activeCountsBuf);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(countsInit), countsInit);
+}
+
+
 
 void Mesh::drawSSBO() {
     // Draw mesh in instanced positions from the SSBO
@@ -145,9 +222,22 @@ void Mesh::createCircle(float radius, unsigned int numVertices, float red, float
 }
 
 void Mesh::terminate() {
-    // Delete Buffers
+    // Delete Standard Buffers
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &EBO);
     glDeleteBuffers(1, &iVBO);
+
+    // Delete Barnes-Hut Compute Shader Buffers
+    glDeleteBuffers(1, &sortedIdxBuf);
+    glDeleteBuffers(1, &mortonCodeBuf);
+    glDeleteBuffers(1, &nodesBuf);
+    glDeleteBuffers(1, &nextFreeNodeBuf);
+    glDeleteBuffers(1, &scenceBoundsBuf);
+    glDeleteBuffers(1, &partialBoundsBuf);
+    glDeleteBuffers(1, &activeABuf);
+    glDeleteBuffers(1, &activeBBuf);
+    glDeleteBuffers(1, &activeCountsBuf);
+    glDeleteBuffers(1, &leafNodeBuf);
+    glDeleteBuffers(1, &nodeParentBuf);
 }
