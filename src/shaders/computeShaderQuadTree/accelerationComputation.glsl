@@ -34,7 +34,7 @@ void main() {
             vec3 dist = posI - bodies[bodyJ].position.xyz;
             float distSqr = dot(dist, dist) + rSoft * rSoft;
             float invDistCube = 1.0 / sqrt(distSqr * distSqr * distSqr);
-            accel += -G * bodies[bodyJ].position.w * dist * invDistCube;
+            accel -= G * bodies[bodyJ].position.w * dist * invDistCube;
             continue;
         }
 

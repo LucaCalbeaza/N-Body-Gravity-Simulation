@@ -14,21 +14,19 @@ void atomicAddCOM(int parentIndex, vec3 com, float mass) {
 
 void main() {
     int leafIdx = int(gl_GlobalInvocationID.x);
-    if (leafIdx >= int(n)) return;
+    if (leafIdx >= int(n)){
+        return;
+    } 
 
     // Get body index, alongside it's com and mass
     int body = int(sortedIdx[leafIdx]);
     vec3 com = bodies[body].position.xyz;
     float mass = bodies[body].position.w;
 
-    // Get leaf node index and parent index
-    int node = leafNode[leafIdx];        
-    int parent = nodeParent[node];    
-
-    // Set Leaf node comAndMass vector
-    nodes[node].comAndMass = vec4(com, mass);
-   
-
+    // Get leaf node index and initial parent index
+    int node = leafNode[leafIdx];           
+    int parent = node;
+    
     while (parent != -1) {
         // Add this child's contribution onto the parent
         atomicAddCOM(parent, com, mass);  

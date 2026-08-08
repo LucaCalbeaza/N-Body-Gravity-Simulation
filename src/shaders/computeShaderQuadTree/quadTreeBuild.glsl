@@ -54,12 +54,28 @@ void main() {
     if (end - start <= 1) {
         nodes[nodeIdx].bodyIndex = int(sortedIdx[start]);
         nodes[nodeIdx].children  = ivec4(-1);
+        nodes[nodeIdx].comAndMass   = vec4(0.0);
+        nodes[nodeIdx].childCount   = 1; 
+        nodes[nodeIdx].checkInCount = 0;
         leafNode[start] = nodeIdx;
         return;
     }
 
+    // Bottom of the tree non-leaf node case:
+    if (level >= 15) {
+        nodes[nodeIdx].bodyIndex    = -1;
+        nodes[nodeIdx].children     = ivec4(-1);
+        nodes[nodeIdx].comAndMass   = vec4(0.0);
+        nodes[nodeIdx].childCount   = end - start;  // every body here checks in
+        nodes[nodeIdx].checkInCount = 0;
+        for (int k = start; k < end; k++) {
+            leafNode[k] = nodeIdx;
+        }
+        return;
+    }
+
     // Internal case: split [start, end) into up to 4 quadrant sub-ranges.
-    // Note: I reset any data from previous frames here. 
+    // Note: Reset any data from previous frames here. 
     nodes[nodeIdx].bodyIndex = -1;
     nodes[nodeIdx].childCount = 0;
     nodes[nodeIdx].checkInCount = 0;
