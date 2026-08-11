@@ -20,6 +20,7 @@
 
 class Mesh {
 public:
+    // ------------ Mesh Sturctures --------------
     struct MeshBody {
         // Mass stored in position.w
         glm::vec4 position;          
@@ -35,14 +36,36 @@ public:
         MeshBody(const Body& body);
     };
 
+    // GpuNode structure on the CPU. Mimics the field layout of the 
+    // GPU structure exactly. 
+    struct GpuNodeCPU {
+        float comAndMass[4];
+        float centerAndSize[4];
+        int32_t children[4];
+        int32_t bodyIndex;
+        int32_t rangeStart;
+        int32_t rangeEnd;
+        int32_t checkInCount;
+        int32_t childCount;
+        int32_t _pad0, _pad1, _pad2;
+    };
+
+
+    // ------------ Mesh --------------------
+
 
     // Vertices and Indices Data
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
     int n;
 
-    // Buffers and Array
-    unsigned int VBO, VAO, EBO, iVBO, SSBO;
+    // Standard Buffers and Arrays
+    GLuint VBO, VAO, EBO, iVBO, SSBO;
+
+    // Barnes-Hut Compute Shader Buffers & int variables;
+    GLuint sortedIdxBuf, mortonCodeBuf, nodesBuf, nextFreeNodeBuf, scenceBoundsBuf;
+    GLuint partialBoundsBuf, activeABuf, activeBBuf, activeCountsBuf, leafNodeBuf, nodeParentBuf;
+    unsigned int totalSizePadded, numGroupsPadded, maxNodes;
 
     /**
      * Mesh Constructor: Creates a mesh with given vertices and 
@@ -51,9 +74,27 @@ public:
     Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n);
 
     /**
+     * Returns an SSBO object ID with the given size and data attached 
+     * to the given binding
+     */
+    GLuint makeSSBO(size_t byteSize, const void* data, GLuint bindingLocation);
+
+    /**
      * Loads the given bodies into the SSBO 
      */
     void loadBodies(const std::vector<Body>& bodies);
+
+    /**
+     * Initializes the Barnes-Hut Tree variables and all of the 
+     * SSBO buffers.
+     */
+    void initBarnesHutTree();
+
+    /**
+     * Resets the Barnes-Hut root node and also resets the 
+     * buffer data for several of the buffers. 
+     */
+    void resetBarnesHutTree(const float sceneBounds[4]);
 
     /**
      * Renders the given mesh at each of the given positions

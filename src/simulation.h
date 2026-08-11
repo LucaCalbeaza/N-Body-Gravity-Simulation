@@ -22,10 +22,20 @@ class Simulation {
 public:
     // Graphic Properties
     Window window; 
-    Shader shader;
-    Shader computeShader;
     Mesh mesh;
     unsigned int screenSize;
+
+    // Shaders
+    Shader shader;
+    Shader computeShader;
+    Shader boundingBoxFirstStepShader;
+    Shader boundingBoxSecondStepShader;
+    Shader mortonCodeGenerationShader;
+    Shader bitonicSortShader;
+    Shader quadTreeBuildShader;
+    Shader centerOfMassReductionShader;
+    Shader accelerationComputationShader;
+
 
     // Time and Frame Count Properties
     float dt;
@@ -46,14 +56,14 @@ public:
     float G;
     const float rSoft = 0.05f;
     float boundaryRadius = 2.0f;
-
+    float theta;
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G);
+    Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta);
 
 private:
     /**
@@ -90,10 +100,18 @@ private:
 
     /**
      * Updates the acceleration, velocity and position of each star by 
-     * calculating their gravitional interactions via the computation 
-     * shader. 
+     * calculating their gravitional interactions via a brute force 
+     * implementation using a compute shader. 
      */
-    void updatePhysicsComputeShader();
+    void updatePhysicsBruteForceComputeShader();
+
+    /**
+     * Updates the acceleration, velocity and position of each star by 
+     * calculating their gravitional interactions via a Barnes-Hut tree
+     * implementation using compute shaders. Barnes-Hut approximations 
+     * are made using the given theta threshold.
+     */
+    void updatePhysicsBarnesHutTreeComputeShader(float theta);
 
     /**
      * Return the center of mass of the stars in the system 
