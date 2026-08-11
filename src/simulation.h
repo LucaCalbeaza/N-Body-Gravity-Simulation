@@ -56,13 +56,14 @@ public:
     float G;
     const float rSoft = 0.05f;
     float boundaryRadius = 2.0f;
+    float theta;
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G);
+    Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta);
 
 private:
     /**

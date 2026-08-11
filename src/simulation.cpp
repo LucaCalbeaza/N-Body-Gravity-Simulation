@@ -6,10 +6,9 @@
 #include "simulation.h"
 #include <iostream>
 #include "omp.h"
-#include "quadTreePipelineTest.h"
 
 
-Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G) :   
+Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta) :   
     window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForce.glsl"),
@@ -24,7 +23,8 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     n(n),
     mass(mass),
     G(G),
-    screenSize(screenWidth)               {
+    screenSize(screenWidth),               
+    theta(theta)            {
     
     // Time Variables : FPS Update Rate
     dt = 1.0 / fps; 
@@ -44,6 +44,7 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     // Run Simulation
     run();
 }
+
 
 void Simulation::generateStarData() {
     // Create RNG device set between [-1.0f, 1.0f]
@@ -98,7 +99,7 @@ void Simulation::run() {
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            updatePhysicsBarnesHutTreeComputeShader(0.5f);
+            updatePhysicsBarnesHutTreeComputeShader(theta);
             //updatePhysicsBruteForceComputeShader();
             frameTimeAccumulation -= dt;
             steps++;
