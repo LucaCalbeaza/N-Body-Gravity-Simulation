@@ -55,8 +55,8 @@ void Simulation::generateStarData() {
     // Generate n stars with random initial {x,y} positions between
     // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  0);
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.0f);
+        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  genRandom(gen));
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.1*genRandom(gen));
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -72,9 +72,6 @@ Mesh Simulation::generateMesh() {
 void Simulation::run() {
     // While loop runs while the window remains open
     while(!glfwWindowShouldClose(window.window)) {
-        // Register Input
-        window.processInput();
-
         // Frame time calculation
         float currentFrameTime = glfwGetTime();
         float frameTime = currentFrameTime - lastFrameTime;
@@ -94,13 +91,16 @@ void Simulation::run() {
             fpsElapsedTime = 0.0f;
         }
 
+        // Register Input
+        window.processInput(frameTime);
+
         // Update the star data. Incase of frame drops update the star data 
         // multiple times to account for loss. Limit set to maxStepsPerFrame
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            updatePhysicsBarnesHutTreeComputeShader(theta);
-            //updatePhysicsBruteForceComputeShader();
+            //updatePhysicsBarnesHutTreeComputeShader(theta);
+            updatePhysicsBruteForceComputeShader();
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {
@@ -110,16 +110,18 @@ void Simulation::run() {
 
         // Render and active shader program
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader.use();
 
-        // Bind position data and Draw | Only needed when using CPU computation
-        // positions.clear();
-        // for(unsigned int i = 0; i < n; i++) {
-        //     positions.push_back(stars[i].position);
-        // }
-        // mesh.drawInstanced(positions, shader);
+        // pass projection matrix to shader 
+        glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
 
+        // pass view matrix to shader
+        glm::mat4 view = window.camera.GetViewMatrix();
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+
+        // Draw
         mesh.drawSSBO();
 
         // Swap buffers and update window title

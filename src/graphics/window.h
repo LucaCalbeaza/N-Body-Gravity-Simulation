@@ -10,11 +10,16 @@
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "camera.h"
 
 class Window {
 public: 
     // Program Window
     GLFWwindow* window;
+    Camera camera; 
+    float lastX;
+    float lastY;
+    bool firstMouse = true;
 
     /**
      * Window Constructor: Creates a window with given width, height
@@ -33,12 +38,16 @@ public:
      * Process all input: query GLFW whether relevant keys are pressed/released 
      * this frame and react accordingly.
      */
-    void processInput();
+    void processInput(float dt);
 
     /**
      * Ensures that the viewport matches any new window dimensions.
      */
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+    static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
     /**
      * Terminates the window.
