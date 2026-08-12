@@ -18,7 +18,7 @@ public:
     glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
     glm::vec3 up;
     glm::vec3 right;
     
@@ -29,7 +29,7 @@ public:
     
     // euler Angles
     float yaw = -45.0f;;
-    float pitch = 45.0f;;
+    float pitch = 15.0f;;
     // camera options
     float movementSpeed = 2.5f;
     float mouseSensitivity = 0.1f;

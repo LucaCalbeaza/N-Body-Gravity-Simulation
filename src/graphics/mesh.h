@@ -113,6 +113,12 @@ public:
      */
     void createCircle(float radius, unsigned int numVertices, float red, float green, float blue);
 
+     /**
+     * Sets the vertoces and indices of the mesh to represent 
+     * an icosphere of 12 vertices with the given radius, and RGB color.
+     */
+    void createSphere(float radius, float red, float green, float blue);
+
     /**
      * Deletes Buffers and arrays.
      */

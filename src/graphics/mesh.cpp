@@ -221,6 +221,47 @@ void Mesh::createCircle(float radius, unsigned int numVertices, float red, float
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW); 
 }
 
+void Mesh::createSphere(float radius, float red, float green, float blue) {
+    // Clear existing Mesh data
+    vertices.clear();
+    indices.clear();
+
+    // Find Golden Ratio
+    float goldenRatio = (1.0f + std::sqrt(5.0f)) / 2.0f;
+
+    // Create Default Vertices
+    std::vector<glm::vec3> baseVertices = {
+        glm::vec3(-1, goldenRatio, 0), glm::vec3(1, goldenRatio, 0), glm::vec3(-1, -goldenRatio, 0), glm::vec3(1, -goldenRatio, 0), 
+        glm::vec3(0, -1, goldenRatio), glm::vec3(0, 1, goldenRatio), glm::vec3(0, -1, -goldenRatio), glm::vec3(0, 1, -goldenRatio),
+        glm::vec3(goldenRatio, 0, -1), glm::vec3(goldenRatio, 0, 1), glm::vec3(-goldenRatio, 0, -1), glm::vec3(-goldenRatio, 0, 1)
+    };
+
+    // Normalize and Adjust for Radius
+    for (const auto& vertex : baseVertices) {
+        float length = std::sqrt(vertex.x * vertex.x + vertex.y * vertex.y + vertex.z * vertex.z);
+        vertices.push_back((vertex.x / length) * radius);
+        vertices.push_back((vertex.y / length) * radius);
+        vertices.push_back((vertex.z / length) * radius);
+
+        vertices.push_back(red);
+        vertices.push_back(green);
+        vertices.push_back(blue);
+    }
+
+    // Create Indices
+    indices = {
+        0, 11, 5,   0, 5, 1,   0, 1, 7,   0, 7, 10,  0, 10, 11, 
+        1, 5, 9,    5, 11, 4,  11, 10, 2, 10, 7, 6,  7, 1, 8,   
+        3, 9, 4,    3, 4, 2,   3, 2, 6,   3, 6, 8,   3, 8, 9,   
+        4, 9, 5,    2, 4, 11,  6, 2, 10,  8, 6, 7,   9, 8, 1   
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);  
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW); 
+}
+
 void Mesh::terminate() {
     // Delete Standard Buffers
     glDeleteBuffers(1, &VBO);

@@ -11,7 +11,7 @@
 Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta) :   
     window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
-    computeShader("src/shaders/computeShaderBruteForce.glsl"),
+    computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
     boundingBoxFirstStepShader("src/shaders/computeShaderQuadTree/boundingBoxFirstStep.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
     boundingBoxSecondStepShader("src/shaders/computeShaderQuadTree/boundingBoxSecondStep.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
     mortonCodeGenerationShader("src/shaders/computeShaderQuadTree/mortonCodeGeneration.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
@@ -55,8 +55,8 @@ void Simulation::generateStarData() {
     // Generate n stars with random initial {x,y} positions between
     // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  genRandom(gen));
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.1*genRandom(gen));
+        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  0);
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0);
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -65,7 +65,8 @@ void Simulation::generateStarData() {
 
 Mesh Simulation::generateMesh() {
     // Create circle mesh and load the star data into the mesh SSBO
-    mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
+    //mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
+    mesh.createSphere(0.002f, 1.0f, 1.0f, 1.0f);
     return mesh;
 }
 
@@ -99,8 +100,8 @@ void Simulation::run() {
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            //updatePhysicsBarnesHutTreeComputeShader(theta);
-            updatePhysicsBruteForceComputeShader();
+            updatePhysicsBarnesHutTreeComputeShader(theta);
+            //updatePhysicsBruteForceComputeShader();
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {

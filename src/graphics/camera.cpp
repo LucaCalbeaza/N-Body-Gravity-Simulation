@@ -5,6 +5,7 @@
 */
 
 #include "camera.h"
+#include <iostream>
 
 Camera::Camera() {
     updateCameraVectors();
@@ -40,8 +41,10 @@ void Camera::ProcessMouseMovement(float xOffset, float yOffset, GLboolean constr
     xOffset *= mouseSensitivity;
     yOffset *= mouseSensitivity;
 
-    yaw += xOffset;
+    yaw -= xOffset;
     pitch -= yOffset;
+
+    //std::cout << "Yaw: " << yaw << "   Pitch: " << pitch << std::endl;
 
     // make sure that when pitch is out of bounds, screen doesn't get flipped.
     if (constrainPitch) {
@@ -65,8 +68,8 @@ void Camera::updateCameraVectors() {
     // and then add to the position.
     glm::vec3 offset;
     offset.x = radius * cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-    offset.y = radius * sin(glm::radians(pitch));
-    offset.z = radius * cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    offset.y = radius * cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+    offset.z = radius * sin(glm::radians(pitch));
     position = target + offset;
 
     // front/right/up are now derived from position and target rather
