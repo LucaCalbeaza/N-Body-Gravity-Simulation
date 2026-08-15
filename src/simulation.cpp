@@ -8,8 +8,8 @@
 #include "omp.h"
 
 
-Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta, bool is3D) :   
-    window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
+Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool is3D) :   
+    window(window),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
     boundingBoxFirstStepShader(
@@ -43,8 +43,7 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     mesh(std::vector<float>(), std::vector<unsigned int>(), n),
     n(n),
     mass(mass),
-    G(G),
-    screenSize(screenWidth),               
+    G(G),              
     theta(theta),
     is3D(is3D)            {
     

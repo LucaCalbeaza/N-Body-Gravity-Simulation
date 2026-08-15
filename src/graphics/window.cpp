@@ -8,6 +8,8 @@
 
 Window::Window(unsigned int width, unsigned int height, const char* title) : 
     camera(),
+    width(width),
+    height(height),
     lastX(width / 2.0f),
     lastY(height / 2.0f)
     {

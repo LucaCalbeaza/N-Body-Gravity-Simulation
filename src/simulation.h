@@ -25,9 +25,8 @@
 class Simulation {
 public:
     // Graphic Properties
-    Window window; 
+    Window &window; 
     Mesh mesh;
-    unsigned int screenSize;
     bool is3D;
 
     // Shaders
@@ -68,7 +67,7 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta, bool is3D);
+    Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool is3D);
 
 private:
     /**

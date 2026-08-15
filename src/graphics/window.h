@@ -17,6 +17,9 @@ public:
     // Program Window
     GLFWwindow* window;
     Camera camera; 
+    unsigned int width;
+    unsigned int height;
+
     float lastX;
     float lastY;
     bool firstMouse = true;
@@ -45,8 +48,15 @@ public:
      */
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+    /**
+     * Process any changes in mouse movement to the camera
+     */
     static void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 
+    
+    /**
+     * Process any scroll wheel actions to the camera
+     */
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
     /**
