@@ -18,7 +18,7 @@ struct GpuNode {
 };
 
 // Level constant for the 3D Tree
-const int MAX_OCTREE_LEVEL = 21;
+const int MAX_OCTREE_LEVEL = 16;
 
 layout(std430, binding = 0) buffer Bodies      { shaderBody bodies[]; };                            // shaderBodies Buffer
 layout(std430, binding = 1) buffer SortedIndex { uint sortedIdx[]; };                               // Z-Order curve sorted mortonCode Buffer

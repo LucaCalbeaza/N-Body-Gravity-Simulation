@@ -19,7 +19,7 @@ void main() {
 
     // Initialize a stack with size 256 and initialize 
     // with root and index 1
-    int stack[256];
+    int stack[128];
     int sp = 0;
     stack[sp++] = rootIndex;
 

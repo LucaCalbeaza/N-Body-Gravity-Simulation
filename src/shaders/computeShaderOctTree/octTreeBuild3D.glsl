@@ -67,7 +67,7 @@ void main() {
     }
 
     // Bottom of the tree non-leaf node case:
-    if (level >= 20) {
+    if (level >= 15) {
         nodes[nodeIdx].bodyIndex    = -1;
         nodes[nodeIdx].children[0]  = ivec4(-1);
         nodes[nodeIdx].children[1]  = ivec4(-1);

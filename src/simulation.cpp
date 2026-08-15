@@ -76,8 +76,8 @@ void Simulation::generateStarData() {
     // Generate n stars with random initial {x,y} positions between
     // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), 0);
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), 0);
+        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), genRandom(gen));
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), 0.1*genRandom(gen));
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -312,7 +312,7 @@ void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
     // Quad Tree Build
     quadTreeBuildShader.use();
     GLint levelLoc = glGetUniformLocation(quadTreeBuildShader.ID, "level");
-    int maxLevel = simulation3D ? 21 : 16; 
+    int maxLevel = 16; 
     GLuint activeBuffer = mesh.activeABuf;
     GLuint nextBuffer = mesh.activeBBuf;
     
