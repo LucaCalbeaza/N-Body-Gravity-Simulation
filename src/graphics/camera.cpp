@@ -7,7 +7,14 @@
 #include "camera.h"
 #include <iostream>
 
-Camera::Camera() {
+Camera::Camera(bool window3D) {
+    if (window3D) {
+        yaw = -45.0f;
+        pitch = 15.0f;
+    } else {
+        yaw = 0.0f;
+        pitch = 90.0f;
+    }
     updateCameraVectors();
 }
 
@@ -15,7 +22,7 @@ glm::mat4 Camera::GetViewMatrix() {
     return glm::lookAt(position, target, up);
 }
 
-void Camera::ProcessKeyboard(int key, float dt) {
+void Camera::ProcessKeyboard(int key, float dt, bool window3D) {
     float velocity = movementSpeed * dt;
     switch (key) {
         // W Key
@@ -31,10 +38,24 @@ void Camera::ProcessKeyboard(int key, float dt) {
             target -= right * velocity;
             break;
         // D Key
-        default:
+        case 3:
             target += right * velocity;
             break;
+        // Spacebar
+        default: 
+            radius = 2.5f;
+            target = glm::vec3(0.0f, 0.0f, 0.0f);
+            position = glm::vec3(0.0f, 0.0f, 0.0f);
+            if (window3D) {
+                yaw = -45.0f;
+                pitch = 15.0f;
+            } else {
+                yaw = 0.0f;
+                pitch = 90.0f;
+            }
+            break;
     }
+    updateCameraVectors();
 }
 
 void Camera::ProcessMouseMovement(float xOffset, float yOffset, GLboolean constrainPitch) {
@@ -43,8 +64,6 @@ void Camera::ProcessMouseMovement(float xOffset, float yOffset, GLboolean constr
 
     yaw -= xOffset;
     pitch -= yOffset;
-
-    //std::cout << "Yaw: " << yaw << "   Pitch: " << pitch << std::endl;
 
     // make sure that when pitch is out of bounds, screen doesn't get flipped.
     if (constrainPitch) {

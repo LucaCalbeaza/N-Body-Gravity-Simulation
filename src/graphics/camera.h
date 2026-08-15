@@ -23,13 +23,13 @@ public:
     glm::vec3 right;
     
     // Orbit  Attributes 
-    float radius = 5.0f;
+    float radius = 2.5f;
     float minRadius = 0.5f;
     float maxRadius = 50.0f;
     
     // euler Angles
-    float yaw = -45.0f;;
-    float pitch = 15.0f;;
+    float yaw;
+    float pitch;
     // camera options
     float movementSpeed = 2.5f;
     float mouseSensitivity = 0.1f;
@@ -37,9 +37,12 @@ public:
     float zoomSensitivity = 0.5f;
 
     /**
-     * Camera Constructor: Creates a camera object with default attributes.
+     * Camera Constructor: Creates a camera object. If the window is 3D the 
+     * default camera has yaw = -45.0f & pitch = 15.0f. If the window is not 
+     * 3D the default camera is placed directly above with yaw = 0.0f & 
+     * pitch = 90.0f.
      */
-    Camera();
+    Camera(bool window3D);
 
     /**
      * Returns the view matrix calculated using Euler Angles and the LookAt Matrix.
@@ -50,7 +53,7 @@ public:
      * Processes input received from any keyboard-like input system and update in
      * accordance with dt to account for fps inconsistencies.
      */
-    void ProcessKeyboard(int key, float dt);
+    void ProcessKeyboard(int key, float dt, bool window3D);
 
     /**
      * processes input received from a mouse input system. Expects the offset value

@@ -8,44 +8,44 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool is3D) :   
+Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool simulation3D) :   
     window(window),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
     boundingBoxFirstStepShader(
-        is3D ? "src/shaders/computeShaderOctTree/boundingBoxFirstStep3D.glsl"    : "src/shaders/computeShaderQuadTree/boundingBoxFirstStep2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxFirstStep3D.glsl"    : "src/shaders/computeShaderQuadTree/boundingBoxFirstStep2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     boundingBoxSecondStepShader(
-        is3D ? "src/shaders/computeShaderOctTree/boundingBoxSecondStep3D.glsl"   : "src/shaders/computeShaderQuadTree/boundingBoxSecondStep2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxSecondStep3D.glsl"   : "src/shaders/computeShaderQuadTree/boundingBoxSecondStep2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     mortonCodeGenerationShader(
-        is3D ? "src/shaders/computeShaderOctTree/mortonCodeGeneration3D.glsl"    : "src/shaders/computeShaderQuadTree/mortonCodeGeneration2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/mortonCodeGeneration3D.glsl"    : "src/shaders/computeShaderQuadTree/mortonCodeGeneration2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     bitonicSortShader(
-        is3D ? "src/shaders/computeShaderOctTree/bitonicSort3D.glsl"             : "src/shaders/computeShaderQuadTree/bitonicSort2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/bitonicSort3D.glsl"             : "src/shaders/computeShaderQuadTree/bitonicSort2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     quadTreeBuildShader(
-        is3D ? "src/shaders/computeShaderOctTree/octTreeBuild3D.glsl"            : "src/shaders/computeShaderQuadTree/quadTreeBuild2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/octTreeBuild3D.glsl"            : "src/shaders/computeShaderQuadTree/quadTreeBuild2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     centerOfMassReductionShader(
-        is3D ? "src/shaders/computeShaderOctTree/centerOfMassReduction3D.glsl"   : "src/shaders/computeShaderQuadTree/centerOfMassReduction2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/centerOfMassReduction3D.glsl"   : "src/shaders/computeShaderQuadTree/centerOfMassReduction2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     accelerationComputationShader(
-        is3D ? "src/shaders/computeShaderOctTree/accelerationComputation3D.glsl" : "src/shaders/computeShaderQuadTree/accelerationComputation2D.glsl",
-        is3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/accelerationComputation3D.glsl" : "src/shaders/computeShaderQuadTree/accelerationComputation2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     mesh(std::vector<float>(), std::vector<unsigned int>(), n),
     n(n),
     mass(mass),
     G(G),              
     theta(theta),
-    is3D(is3D)            {
+    simulation3D(simulation3D)            {
     
     // Time Variables : FPS Update Rate
     dt = 1.0 / fps; 
@@ -60,7 +60,7 @@ Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, fl
     generateStarData();
     generateMesh();
     mesh.loadBodies(stars);
-    mesh.initBarnesHutTree(is3D);
+    mesh.initBarnesHutTree(simulation3D);
 
     // Run Simulation
     run();
@@ -76,8 +76,8 @@ void Simulation::generateStarData() {
     // Generate n stars with random initial {x,y} positions between
     // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  genRandom(gen));
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.1*genRandom(gen));
+        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), 0);
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), 0);
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -296,23 +296,23 @@ void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
     }
 
     // Initialize tree root Node: 
-    if (is3D) {
+    if (simulation3D) {
         float sceneBounds[8];
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.scenceBoundsBuf);
         glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(sceneBounds), sceneBounds);
-        mesh.resetBarnesHutTree(sceneBounds, is3D);
+        mesh.resetBarnesHutTree(sceneBounds, simulation3D);
     } else {
         float sceneBounds[4];
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.scenceBoundsBuf);
         glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(sceneBounds), sceneBounds);
-        mesh.resetBarnesHutTree(sceneBounds, is3D);
+        mesh.resetBarnesHutTree(sceneBounds, simulation3D);
     }
 
 
     // Quad Tree Build
     quadTreeBuildShader.use();
     GLint levelLoc = glGetUniformLocation(quadTreeBuildShader.ID, "level");
-    int maxLevel = is3D ? 21 : 16; 
+    int maxLevel = simulation3D ? 21 : 16; 
     GLuint activeBuffer = mesh.activeABuf;
     GLuint nextBuffer = mesh.activeBBuf;
     

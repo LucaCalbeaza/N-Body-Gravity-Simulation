@@ -27,7 +27,7 @@ public:
     // Graphic Properties
     Window &window; 
     Mesh mesh;
-    bool is3D;
+    bool simulation3D;
 
     // Shaders
     Shader shader;
@@ -67,7 +67,7 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool is3D);
+    Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool simulation3D);
 
 private:
     /**

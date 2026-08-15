@@ -19,6 +19,7 @@ public:
     Camera camera; 
     unsigned int width;
     unsigned int height;
+    bool window3D;
 
     float lastX;
     float lastY;
@@ -29,7 +30,7 @@ public:
      * and name. Sets the context to this window and the viewport to 
      * match the window dimensions.  
      */
-    Window(unsigned int width, unsigned int height, const char* title);
+    Window(unsigned int width, unsigned int height, const char* title, bool window3D);
 
     /**
      * Swap the front and back buffer of the window and then poll for events. 

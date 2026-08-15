@@ -6,8 +6,9 @@
 #include "window.h"
 
 
-Window::Window(unsigned int width, unsigned int height, const char* title) : 
-    camera(),
+Window::Window(unsigned int width, unsigned int height, const char* title, bool window3D) : 
+    camera(window3D),
+    window3D(window3D),
     width(width),
     height(height),
     lastX(width / 2.0f),
@@ -55,13 +56,15 @@ void Window::processInput(float dt) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(0, dt);
+        camera.ProcessKeyboard(0, dt, window3D);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(1, dt);
+        camera.ProcessKeyboard(1, dt, window3D);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(2, dt);
+        camera.ProcessKeyboard(2, dt, window3D);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(3, dt);
+        camera.ProcessKeyboard(3, dt, window3D);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.ProcessKeyboard(4, dt, window3D);
 };
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -70,6 +73,10 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 
 void Window::mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (!win->window3D) {
+        return;
+    }
 
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
