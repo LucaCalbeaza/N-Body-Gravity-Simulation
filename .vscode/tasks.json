@@ -13,6 +13,7 @@
         "${workspaceFolder}/src/*.cpp",
         "${workspaceFolder}/src/graphics/*.cpp",
         "${workspaceFolder}/src/physics/*.cpp",
+        "${workspaceFolder}/include/imGUI/*.cpp",
         "${workspaceFolder}/src/glad.c",
         "-I${workspaceFolder}/include",
         "-L${workspaceFolder}/lib",
