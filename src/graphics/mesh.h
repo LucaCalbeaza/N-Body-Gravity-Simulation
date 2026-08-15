@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "shader.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -36,12 +37,26 @@ public:
         MeshBody(const Body& body);
     };
 
-    // GpuNode structure on the CPU. Mimics the field layout of the 
-    // GPU structure exactly. 
-    struct GpuNodeCPU {
+    // 2D GpuNode structure on the CPU. Mimics the field layout of the 
+    // GPU structure exactly in common2D.glsl. 
+    struct GpuNodeCPU2D {
         float comAndMass[4];
         float centerAndSize[4];
         int32_t children[4];
+        int32_t bodyIndex;
+        int32_t rangeStart;
+        int32_t rangeEnd;
+        int32_t checkInCount;
+        int32_t childCount;
+        int32_t _pad0, _pad1, _pad2;
+    };
+
+    // 3D GpuNode structure on the CPU. Mimics the field layout of the 
+    // GPU structure exactly in common3D.glsl.
+    struct GpuNodeCPU3D {
+        float comAndMass[4];
+        float centerAndSize[4];
+        int32_t children[8];
         int32_t bodyIndex;
         int32_t rangeStart;
         int32_t rangeEnd;
@@ -88,13 +103,13 @@ public:
      * Initializes the Barnes-Hut Tree variables and all of the 
      * SSBO buffers.
      */
-    void initBarnesHutTree();
+    void initBarnesHutTree(bool is3D);
 
     /**
      * Resets the Barnes-Hut root node and also resets the 
      * buffer data for several of the buffers. 
      */
-    void resetBarnesHutTree(const float sceneBounds[4]);
+    void resetBarnesHutTree(const float sceneBounds[8], bool is3D);
 
     /**
      * Renders the given mesh at each of the given positions

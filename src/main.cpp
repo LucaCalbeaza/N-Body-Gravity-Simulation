@@ -4,6 +4,6 @@
 
 // Main Class
 int main() {
-    Simulation simulation(1000, 1000, 60.0f, 150000, 1.0f, 0.1f, 0.75f);
+    Simulation simulation(1000, 1000, 60.0f, 50000, 1.0f, 0.1f, 0.9f, true);
     return 0;
 }

@@ -102,7 +102,7 @@ void Mesh::loadBodies(const std::vector<Body>& bodies) {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, meshBodies.size() * sizeof(MeshBody), meshBodies.data()); 
 }
 
-void Mesh::initBarnesHutTree() {
+void Mesh::initBarnesHutTree(bool is3D) {
     // Find the total padded size needed (first 2^i < n), and subsequently 
     // the number of GPU thread groups needed. 
     totalSizePadded = 1; 
@@ -114,42 +114,75 @@ void Mesh::initBarnesHutTree() {
     // Provide extra headroom for the max number of nodes. n * 2-4 should 
     // typically be enough, so choose 8 to be safe. 
     maxNodes = n * 8;
-
+    
     // Create and bind SSBO ID object to buffer variables. Buffer for the 
     // bodies buffer was already bound in the loadBodies() function. 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, SSBO);
     sortedIdxBuf = makeSSBO(totalSizePadded * sizeof(uint32_t), nullptr, 1);
-    mortonCodeBuf = makeSSBO(n * sizeof(uint32_t), nullptr, 2);
-    nodesBuf = makeSSBO(maxNodes * sizeof(GpuNodeCPU), nullptr, 3);
     nextFreeNodeBuf = makeSSBO(sizeof(uint32_t), nullptr, 4);
-    scenceBoundsBuf = makeSSBO(sizeof(float) * 4, nullptr, 5);
-    partialBoundsBuf = makeSSBO(((n + 255) / 256) * sizeof(float) * 4, nullptr, 6);
     activeABuf = makeSSBO(maxNodes * sizeof(int32_t), nullptr, 7);
     activeBBuf = makeSSBO(maxNodes * sizeof(int32_t), nullptr, 8);
     activeCountsBuf = makeSSBO(sizeof(uint32_t) * 2, nullptr, 9);
     leafNodeBuf = makeSSBO(n * sizeof(int32_t), nullptr, 10);
     nodeParentBuf = makeSSBO(maxNodes * sizeof(int32_t), nullptr, 11);
+
+    if (is3D) {
+        mortonCodeBuf = makeSSBO(n * sizeof(uint64_t), nullptr, 2);
+        nodesBuf = makeSSBO(maxNodes * sizeof(GpuNodeCPU3D), nullptr, 3);
+        scenceBoundsBuf = makeSSBO(sizeof(float) * 4 * 2, nullptr, 5);
+        partialBoundsBuf = makeSSBO(((n + 255) / 256) * sizeof(float) * 4 * 2, nullptr, 6);
+    } else {
+        mortonCodeBuf = makeSSBO(n * sizeof(uint32_t), nullptr, 2);
+        nodesBuf = makeSSBO(maxNodes * sizeof(GpuNodeCPU2D), nullptr, 3);
+        scenceBoundsBuf = makeSSBO(sizeof(float) * 4, nullptr, 5);
+        partialBoundsBuf = makeSSBO(((n + 255) / 256) * sizeof(float) * 4, nullptr, 6);
+    }
 }
 
-void Mesh::resetBarnesHutTree(const float sceneBounds[4]) {
+void Mesh::resetBarnesHutTree(const float sceneBounds[8], bool is3D) {
     // Create the root node with the given sceneBounds, the center
-    // of mass and mass are initialized to 0 before any bodies are added. 
-    GpuNodeCPU root{};
-    // (x,y,z) positions and size
-    root.centerAndSize[0] = (sceneBounds[0] + sceneBounds[2]) * 0.5f; 
-    root.centerAndSize[1] = (sceneBounds[1] + sceneBounds[3]) * 0.5f; 
-    root.centerAndSize[2] = 0.0f; 
-    root.centerAndSize[3] = std::max(sceneBounds[2] - sceneBounds[0], sceneBounds[3] - sceneBounds[1]) * 1.01f;
-    // Rest
-    root.bodyIndex = -1;
-    root.rangeStart = 0;
-    root.rangeEnd = n;
-    root.checkInCount = 0;
-    root.childCount = 0;
+    // of mass and mass are initialized to 0 before any bodies are added.
+    GpuNodeCPU2D root2D{};
+    GpuNodeCPU3D root3D{};
+    
+    if (is3D) {
+        // Set root node (x,y,z) positions and size for 3D case
+        root3D.centerAndSize[0] = (sceneBounds[0] + sceneBounds[4]) * 0.5f; 
+        root3D.centerAndSize[1] = (sceneBounds[1] + sceneBounds[5]) * 0.5f; 
+        root3D.centerAndSize[2] = (sceneBounds[2] + sceneBounds[6]) * 0.5f;
+        float sizeX = sceneBounds[4] - sceneBounds[0];
+        float sizeY = sceneBounds[5] - sceneBounds[1];
+        float sizeZ = sceneBounds[6] - sceneBounds[2];
+        root3D.centerAndSize[3] = std::max({sizeX, sizeY, sizeZ}) * 1.01f;
 
-    // Reset buffers
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, nodesBuf);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GpuNodeCPU), &root);
+        root3D.bodyIndex = -1;
+        root3D.rangeStart = 0;
+        root3D.rangeEnd = n;
+        root3D.checkInCount = 0;
+        root3D.childCount = 0;
+
+        // Reset buffers
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, nodesBuf);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GpuNodeCPU3D), &root3D);
+    } else {
+        // Set root node (x,y,z) positions and size for 2D case
+        root2D.centerAndSize[0] = (sceneBounds[0] + sceneBounds[2]) * 0.5f; 
+        root2D.centerAndSize[1] = (sceneBounds[1] + sceneBounds[3]) * 0.5f; 
+        root2D.centerAndSize[2] = 0.0f; 
+        float sizeX = sceneBounds[2] - sceneBounds[0];
+        float sizeY = sceneBounds[3] - sceneBounds[1];
+        root2D.centerAndSize[3] = std::max(sizeX, sizeY) * 1.01f;
+
+        root2D.bodyIndex = -1;
+        root2D.rangeStart = 0;
+        root2D.rangeEnd = n;
+        root2D.checkInCount = 0;
+        root2D.childCount = 0;
+
+        // Reset buffers
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, nodesBuf);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GpuNodeCPU2D), &root2D);
+    }
 
     uint32_t nextFreeNodeInit = 1; 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, nextFreeNodeBuf);
@@ -268,6 +301,7 @@ void Mesh::terminate() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &EBO);
     glDeleteBuffers(1, &iVBO);
+    glDeleteBuffers(1, &SSBO);
 
     // Delete Barnes-Hut Compute Shader Buffers
     glDeleteBuffers(1, &sortedIdxBuf);
