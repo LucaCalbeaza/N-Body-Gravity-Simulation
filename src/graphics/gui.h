@@ -3,22 +3,22 @@
  * Description: Declarations for the imGUI class. 
 */
 
-#ifndef IMGUI_H
-#define IMGUI_H
+#ifndef GUI_H
+#define GUI_H
 
 #include "window.h"
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "../include/imGUI/imgui.h"
+#include "../include/imGUI/imgui_impl_glfw.h"
+#include "../include/imGUI/imgui_impl_opengl3.h"
 
-class imGUI {
+class GUI {
 public:
 
     /**
      * imGUI Constructor: Creates a new imGUI window context 
      * onto the given window. 
      */
-    imGUI(Window &window);
+    GUI(Window &window);
 
     /**
      * Cycle a new Dear ImGui frame. 

@@ -3,9 +3,9 @@
  * Description: Implementations for the imGUI class. 
 */
 
-#include "imGUI.h"
+#include "gui.h"
 
-imGUI::imGUI(Window &window) {
+GUI::GUI(Window &window) {
     // Create Context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -18,20 +18,20 @@ imGUI::imGUI(Window &window) {
 }
 
 
-void imGUI::cycleFrame() {
+void GUI::cycleFrame() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
 
-void imGUI::renderFrame() {
+void GUI::renderFrame() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 
-void imGUI::terminate() {
+void GUI::terminate() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
