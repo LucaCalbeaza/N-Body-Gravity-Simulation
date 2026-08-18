@@ -37,6 +37,11 @@ public:
      * Additonally update the window title to display FPS. 
      */
     void update(const char* title);
+
+    /**
+     * Set 3D state and reset camera according to 3D state.
+     */
+    void resetCamera(bool input3D);
    
     /**
      * Process all input: query GLFW whether relevant keys are pressed/released 

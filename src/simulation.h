@@ -50,7 +50,7 @@ public:
     float fpsElapsedTime = 0.0f;
     float currentFPS = 0.0f;
 
-    // Physical Properties
+    // Physical & Computation Properties
     std::vector<Body> stars;
     std::vector<int> innerBodies;
     std::vector<int> outerBodies;
@@ -61,13 +61,14 @@ public:
     const float rSoft = 0.05f;
     float boundaryRadius = 2.0f;
     float theta;
+    unsigned int computationMethod;
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool simulation3D);
+    Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D);
 
 private:
     /**
@@ -79,7 +80,7 @@ private:
      * Adds n random stars to with randomized initial positions and 
      * initial velocity to the simulation.
      */
-    void generateStarData();
+    void generateRandomStarData();
 
     /**
      * Runs the simulation updating and drawing the stars on 

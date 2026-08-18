@@ -16,11 +16,13 @@ Window::Window(unsigned int width, unsigned int height, const char* title, bool 
     {
     // Initialize GLFW
     glfwInit();
+    
 
     // Let GLFW know version and profile
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     // Create GLFW window object, set to context, and check for errors
     window = glfwCreateWindow(width, height, title, NULL, NULL);
@@ -44,6 +46,12 @@ Window::Window(unsigned int width, unsigned int height, const char* title, bool 
     // Set rendering window to entire screen from (0,0) to (800, 800) & Enable depth buffer
     glViewport(0, 0, width, height);
     glEnable(GL_DEPTH_TEST);
+}
+
+void Window::resetCamera(bool input3D) {
+    glfwSwapBuffers(window);
+    window3D = input3D;
+    camera.setDefault(input3D);
 }
 
 void Window::update(const char* title) {

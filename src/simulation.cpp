@@ -8,7 +8,7 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, float G, float theta, bool simulation3D) :   
+Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D) :   
     window(window),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
@@ -41,6 +41,7 @@ Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, fl
         simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     mesh(std::vector<float>(), std::vector<unsigned int>(), n),
+    computationMethod(computationMethod),
     n(n),
     mass(mass),
     G(G),              
@@ -48,7 +49,7 @@ Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, fl
     simulation3D(simulation3D)            {
     
     // Time Variables : FPS Update Rate
-    dt = 1.0 / fps; 
+    dt = 1.0 / 60.0f; 
     lastFrameTime = glfwGetTime();
 
     // Reserve Star Variables
@@ -57,7 +58,7 @@ Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, fl
     positions.reserve(n);
     
     // Generate Mesh and Star Data
-    generateStarData();
+    generateRandomStarData();
     generateMesh();
     mesh.loadBodies(stars);
     mesh.initBarnesHutTree(simulation3D);
@@ -67,7 +68,7 @@ Simulation::Simulation(Window &window, float fps, unsigned int n, float mass, fl
 }
 
 
-void Simulation::generateStarData() {
+void Simulation::generateRandomStarData() {
     // Create RNG device set between [-1.0f, 1.0f]
     std::random_device randomDevice;
     std::mt19937 gen(randomDevice());
@@ -76,8 +77,8 @@ void Simulation::generateStarData() {
     // Generate n stars with random initial {x,y} positions between
     // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), genRandom(gen));
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), 0.1*genRandom(gen));
+        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), (simulation3D) ? genRandom(gen) : 0);
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -121,8 +122,11 @@ void Simulation::run() {
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            updatePhysicsBarnesHutTreeComputeShader(theta);
-            //updatePhysicsBruteForceComputeShader();
+            if (computationMethod == 0) {
+                updatePhysicsBarnesHutTreeComputeShader(theta);
+            } else {
+                updatePhysicsBruteForceComputeShader();
+            }
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {

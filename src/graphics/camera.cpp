@@ -8,10 +8,18 @@
 #include <iostream>
 
 Camera::Camera(bool window3D) {
+    setDefault(window3D);
+}
+
+void Camera::setDefault(bool window3D) {
+    target = glm::vec3(0.0f, 0.0f, 0.0f);
+    position = glm::vec3(0.0f, 0.0f, 0.0f);
     if (window3D) {
+        radius = 4.0f;
         yaw = -45.0f;
         pitch = 15.0f;
     } else {
+        radius = 2.5f;
         yaw = 0.0f;
         pitch = 90.0f;
     }
@@ -43,16 +51,7 @@ void Camera::ProcessKeyboard(int key, float dt, bool window3D) {
             break;
         // Spacebar
         default: 
-            radius = 2.5f;
-            target = glm::vec3(0.0f, 0.0f, 0.0f);
-            position = glm::vec3(0.0f, 0.0f, 0.0f);
-            if (window3D) {
-                yaw = -45.0f;
-                pitch = 15.0f;
-            } else {
-                yaw = 0.0f;
-                pitch = 90.0f;
-            }
+            setDefault(window3D);
             break;
     }
     updateCameraVectors();

@@ -15,15 +15,15 @@
 class Camera {
 public:
     // Camera Attributes
-    glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 target;
+    glm::vec3 position;
     glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
     glm::vec3 up;
     glm::vec3 right;
     
     // Orbit  Attributes 
-    float radius = 2.5f;
+    float radius;
     float minRadius = 0.5f;
     float maxRadius = 50.0f;
     
@@ -43,6 +43,11 @@ public:
      * pitch = 90.0f.
      */
     Camera(bool window3D);
+
+    /**
+     * Set Camera to default placement
+     */
+    void setDefault(bool window3D);
 
     /**
      * Returns the view matrix calculated using Euler Angles and the LookAt Matrix.
@@ -67,7 +72,6 @@ public:
      */
     void ProcessMouseScroll(float yOffset);
 
-private:
     /**
      * Calculates the front vector from the Camera's (updated) Euler Angles
      */
