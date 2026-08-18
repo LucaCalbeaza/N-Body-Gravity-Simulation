@@ -13,6 +13,22 @@
 
 class GUI {
 public:
+    // Simulation Parameters Structure
+    struct inputParameters {
+        bool startSimulation = false;
+        bool simulation3D = false;
+        bool window3D = true;
+        int n = 10000;
+        float mass = 1.0; 
+        float G = 0.1;
+        float theta = 0.5;
+        int computationMethod = 0;
+        int startingCondtion = 0;
+        int cameraCondition = 0;   
+    };
+
+    // ------ GUI -------------
+    inputParameters parameters;
 
     /**
      * imGUI Constructor: Creates a new imGUI window context 
@@ -29,6 +45,12 @@ public:
      * Renders the new frame draw data 
      */
     void renderFrame();
+
+    /**
+     * Run the GUI and return the simulation parameters 
+     * when the user clicks the start button. 
+     */
+    inputParameters run(Window &window, unsigned int guiWidth, unsigned int guiHeight);
 
     /**
      * Terminate the imGUI context 
