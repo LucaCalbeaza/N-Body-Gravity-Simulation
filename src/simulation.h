@@ -42,6 +42,7 @@ public:
 
 
     // Time and Frame Count Properties
+    int startingTime;
     float dt;
     float frameTimeAccumulation = 0.0;
     float lastFrameTime;

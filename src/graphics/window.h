@@ -20,6 +20,7 @@ public:
     unsigned int width;
     unsigned int height;
     bool window3D;
+    bool returnToMenu= false;
 
     float lastX;
     float lastY;

@@ -95,7 +95,7 @@ bool runGUI(Window &window, GUI &gui) {
         ImGui::Text("Gravitational Constant G:");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
-        ImGui::SliderFloat("##Gravitational Constant G", &G, 0.01f, 0.2f);
+        ImGui::SliderFloat("##Gravitational Constant G", &G, 0.01f, 1.0f);
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::PopItemWidth();
 
@@ -136,15 +136,17 @@ bool runGUI(Window &window, GUI &gui) {
             simulation3D = false;
         }
         ImGui::SameLine();
+        ImGui::BeginDisabled(!window3D);
         if (ImGui::RadioButton("Random Generation 3D", startingCondtion == 1)) { 
             startingCondtion = 1; 
             simulation3D = true;
         }
+        ImGui::EndDisabled();
 
 
         // Start Button
         ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::GetWindowSize().x * 0.5f) / 2);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.2f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.1f);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.4f, 1.0f));
         if (ImGui::Button("Start Simulation", ImVec2(ImGui::GetWindowSize().x * 0.5f, 60))) {
             startSimulation = true;
@@ -168,13 +170,20 @@ int main() {
     Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
     GUI gui(window);
 
-    if (!runGUI(window, gui)) {
-        window.terminate();
-        return 0;
+    while (!glfwWindowShouldClose(window.window)) {
+        glfwSetWindowSize(window.window, guiWidth, guiHeight);
+
+        if (!runGUI(window, gui)) {
+            break;
+        }
+        
+        window.resetCamera(window3D);
+        glfwSetWindowSize(window.window, simulationWidth, simulationHeight);
+
+        Simulation simulation(window, computationMethod, n, mass, G, theta, simulation3D);
+        window.returnToMenu = false;
     }
 
-    window.resetCamera(window3D);
-    glfwSetWindowSize(window.window, simulationWidth, simulationHeight);
-    Simulation simulation(window, computationMethod, n, mass, G, theta, simulation3D);
+    window.terminate();
     return 0;
 }

@@ -50,7 +50,8 @@ Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned 
     
     // Time Variables : FPS Update Rate
     dt = 1.0 / 60.0f; 
-    lastFrameTime = glfwGetTime();
+    startingTime = (int)glfwGetTime();
+    lastFrameTime = startingTime;
 
     // Reserve Star Variables
     innerBodies.reserve(n);
@@ -94,7 +95,7 @@ Mesh Simulation::generateMesh() {
 
 void Simulation::run() {
     // While loop runs while the window remains open
-    while(!glfwWindowShouldClose(window.window)) {
+    while(!glfwWindowShouldClose(window.window) && !window.returnToMenu) {
         // Frame time calculation
         float currentFrameTime = glfwGetTime();
         float frameTime = currentFrameTime - lastFrameTime;
@@ -151,7 +152,7 @@ void Simulation::run() {
         mesh.drawSSBO();
 
         // Swap buffers and update window title
-        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime);
+        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime - startingTime);
         window.update(title.c_str());    
     }
     terminate();
@@ -389,7 +390,4 @@ void Simulation::terminate() {
     mesh.terminate();
     shader.destroy();
     computeShader.destroy();
-
-    // Terminate GLFW
-    window.terminate();
 }

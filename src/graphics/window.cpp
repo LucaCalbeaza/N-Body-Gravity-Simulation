@@ -62,7 +62,7 @@ void Window::update(const char* title) {
 
 void Window::processInput(float dt) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+        returnToMenu = true;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(0, dt, window3D);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
