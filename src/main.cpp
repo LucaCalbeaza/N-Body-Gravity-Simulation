@@ -26,7 +26,7 @@ int main() {
         window.resetCamera(parameters.window3D);
         glfwSetWindowSize(window.window, simulationWidth, simulationHeight);
 
-        Simulation simulation(window, parameters.computationMethod, parameters.n, parameters.mass, parameters.G, parameters.theta, parameters.simulation3D);
+        Simulation simulation(window, parameters.computationMethod, parameters.n, parameters.mass, parameters.G, parameters.theta, parameters.simulation3D, parameters.minColor, parameters.maxColor);
         window.returnToMenu = false;
     }
 

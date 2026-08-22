@@ -49,9 +49,16 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     // SSBO Instance Rendering Initilzation | Used only for GPU computation
     glBindBuffer(GL_ARRAY_BUFFER, SSBO);
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);  
+    
+    // Set up Instanced Position Attribute 
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshBody), (void*)0);  
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
+
+    // Set up Instanced Veloctiy Attribute
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(MeshBody), (void*)(4 * sizeof(float)));  
+    glEnableVertexAttribArray(3);
+    glVertexAttribDivisor(3, 1);
 
     // iVBO Instance Rendering Initlization | Using only for CPU computation
     // glBindBuffer(GL_ARRAY_BUFFER, iVBO); 

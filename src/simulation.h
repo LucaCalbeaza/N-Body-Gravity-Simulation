@@ -63,13 +63,16 @@ public:
     float boundaryRadius = 2.0f;
     float theta;
     unsigned int computationMethod;
+    float maxSpeedThreshold = 1.0f;
+    glm::vec3 minColor;
+    glm::vec3 maxColor;
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D);
+    Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D, float minColor[4], float maxColor[4]);
 
 private:
     /**

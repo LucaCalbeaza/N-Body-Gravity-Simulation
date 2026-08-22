@@ -43,27 +43,32 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImFont* titleFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 48.0f);
         ImFont* regularFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 28.0f);
 
-        ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove
+        ImGuiWindowFlags windowflags = ImGuiWindowFlags_NoMove
             | ImGuiWindowFlags_NoResize
             | ImGuiWindowFlags_NoCollapse
             | ImGuiWindowFlags_NoTitleBar
             | ImGuiWindowFlags_NoBringToFrontOnFocus;
+        
+        ImGuiWindowFlags colorPickerFlags = ImGuiColorEditFlags_NoSidePreview
+            | ImGuiColorEditFlags_NoInputs
+            | ImGuiColorEditFlags_NoAlpha;
 
-        ImGui::Begin("N-Body Simulation Setup", nullptr, flags);
+        ImGui::Begin("N-Body Simulation Setup", nullptr, windowflags);
 
         // Title Text
         ImGui::PushFont(titleFont);
         ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("N-Body Simulation Setup").x) / 2);
         ImGui::Text("N-Body Simulation Setup");
         ImGui::PopFont();
-
         ImGui::PushFont(regularFont);
 
 
 
-        // Camera Condtion
+        // Camera Condtion & Color Gradient
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
         ImGui::TextWrapped("Select Camera Configuration");
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.70f); 
+        ImGui::TextWrapped("Select Velocity Color Gradient");
         ImGui::Separator();
 
         if (ImGui::RadioButton("3D Camera", parameters.cameraCondition == 0)) { 
@@ -75,6 +80,10 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
             parameters.cameraCondition = 1; 
             parameters.window3D = false;
         }
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.68f);
+        ImGui::ColorEdit4("Min Velocity", parameters.minColor, colorPickerFlags);  
+        ImGui::SameLine();
+        ImGui::ColorEdit4("Max Velocity", parameters.maxColor, colorPickerFlags);
 
 
 

@@ -8,7 +8,7 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D) :   
+Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D, float minColor[4], float maxColor[4]) :   
     window(window),
     shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
@@ -46,7 +46,10 @@ Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned 
     mass(mass),
     G(G),              
     theta(theta),
-    simulation3D(simulation3D)            {
+    simulation3D(simulation3D),            
+    minColor(glm::vec3(minColor[0], minColor[1], minColor[2])),
+    maxColor(glm::vec3(maxColor[0], maxColor[1], maxColor[2]))    
+    {
     
     // Time Variables : FPS Update Rate
     dt = 1.0 / 60.0f; 
@@ -147,6 +150,11 @@ void Simulation::run() {
         // pass view matrix to shader
         glm::mat4 view = window.camera.GetViewMatrix();
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+
+        // Pass color gradient configurations to shader 
+        glUniform1f(glGetUniformLocation(shader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+        glUniform3f(glGetUniformLocation(shader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+        glUniform3f(glGetUniformLocation(shader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
 
         // Draw
         mesh.drawSSBO();
@@ -390,4 +398,8 @@ void Simulation::terminate() {
     mesh.terminate();
     shader.destroy();
     computeShader.destroy();
+
+    // Reset Title
+    std::string title = "N-Body Orbital Simulation";
+    window.update(title.c_str()); 
 }
