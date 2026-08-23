@@ -42,13 +42,6 @@ public:
     void use();
 
     /**
-     * Set uniform variables for 4Vectors with type float, boolean or int. 
-     */
-    void setVec4f(const std::string &name, float x, float y, float z, float w) const;
-    void setVec4b(const std::string &name, bool x, bool y, bool z, bool w) const;
-    void setVec4i(const std::string &name, int x, int y, int z, int w) const;
-
-    /**
      * Destructor.
     */
     void destroy();
