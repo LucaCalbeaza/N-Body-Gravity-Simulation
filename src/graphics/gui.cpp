@@ -64,12 +64,9 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
 
 
 
-        // Camera Condtion & Color Gradient
+        // Camera Condtion
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
         ImGui::TextWrapped("Select Camera Configuration");
-        ImGui::SameLine(ImGui::GetWindowSize().x * 0.70f); 
-        ImGui::TextWrapped("Select Velocity Color Gradient");
-        ImGui::Separator();
 
         if (ImGui::RadioButton("3D Camera", parameters.cameraCondition == 0)) { 
             parameters.cameraCondition = 0;
@@ -79,11 +76,36 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         if (ImGui::RadioButton("2D Camera", parameters.cameraCondition == 1)) { 
             parameters.cameraCondition = 1; 
             parameters.window3D = false;
+            parameters.startingCondtion = 0;
+        }
+        
+
+        // Particle Graphics and Render Method
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::TextWrapped("Select Render Method");
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.70f); 
+        ImGui::TextWrapped("Select Velocity Color Gradient");
+        ImGui::Separator();
+
+        if (ImGui::RadioButton("Mesh Body", parameters.renderMethod == 0)) { 
+            parameters.renderMethod = 0;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Point Body", parameters.renderMethod == 1)) { 
+            parameters.renderMethod = 1;
         }
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.68f);
         ImGui::ColorEdit4("Min Velocity", parameters.minColor, colorPickerFlags);  
         ImGui::SameLine();
         ImGui::ColorEdit4("Max Velocity", parameters.maxColor, colorPickerFlags);
+        
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
+        ImGui::Text("Body Size:");
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+        ImGui::PushItemWidth(-1.0f);
+        ImGui::SliderFloat("##Body Size", &parameters.bodySize, 0.001f, 0.025f);
+        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::PopItemWidth();
 
 
 
@@ -163,7 +185,7 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
 
         // Start Button
         ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::GetWindowSize().x * 0.5f) / 2);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.1f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.4f, 1.0f));
         if (ImGui::Button("Start Simulation", ImVec2(ImGui::GetWindowSize().x * 0.5f, 60))) {
             parameters.startSimulation = true;

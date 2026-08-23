@@ -30,6 +30,7 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     glGenBuffers(1, &EBO); 
     glGenBuffers(1, &iVBO); 
     glGenBuffers(1, &SSBO);
+    glGenVertexArrays(1, &pointVAO); 
     
     // Bind VAO
     glBindVertexArray(VAO);
@@ -83,15 +84,6 @@ GLuint Mesh::makeSSBO(size_t byteSize, const void* data, GLuint bindingLocation)
     glBufferData(GL_SHADER_STORAGE_BUFFER, byteSize, data, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingLocation, buffer);
     return buffer;
-}
-
-void Mesh::drawInstanced(std::vector<glm::vec3>& positions, Shader shader) {
-    // Draw mesh in instanced positions obtained from the positions vector
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, iVBO);
-    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_DYNAMIC_DRAW);
-    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, positions.size());
-    glBindVertexArray(0);
 }
 
 void Mesh::loadBodies(const std::vector<Body>& bodies) {
@@ -208,12 +200,39 @@ void Mesh::resetBarnesHutTree(const float sceneBounds[8], bool is3D) {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(countsInit), countsInit);
 }
 
+void Mesh::drawInstanced(std::vector<glm::vec3>& positions, Shader shader) {
+    // Draw mesh in instanced positions obtained from the positions vector
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, iVBO);
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_DYNAMIC_DRAW);
+    glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, positions.size());
+    glBindVertexArray(0);
+}
 
-
-void Mesh::drawSSBO() {
+void Mesh::drawSSBOMesh() {
     // Draw mesh in instanced positions from the SSBO
     glBindVertexArray(VAO);
     glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, n);
+    glBindVertexArray(0);
+}
+
+void Mesh::drawSSBOPoints() {
+    glBindVertexArray(pointVAO);
+    glEnable(GL_PROGRAM_POINT_SIZE);       
+
+    // Bind Bodies 
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, SSBO);
+
+    // Enable additive blend
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);            
+    glDepthMask(GL_FALSE);                        
+
+    // Draw points
+    glDrawArrays(GL_POINTS, 0, n);
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
     glBindVertexArray(0);
 }
 
@@ -309,6 +328,7 @@ void Mesh::terminate() {
     glDeleteBuffers(1, &EBO);
     glDeleteBuffers(1, &iVBO);
     glDeleteBuffers(1, &SSBO);
+    glDeleteVertexArrays(1, &pointVAO);
 
     // Delete Barnes-Hut Compute Shader Buffers
     glDeleteBuffers(1, &sortedIdxBuf);

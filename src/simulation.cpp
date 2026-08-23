@@ -8,9 +8,14 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D, float minColor[4], float maxColor[4]) :   
+Simulation::Simulation(
+        Window &window, unsigned int computationMethod, 
+        unsigned int n, float mass, float G, float theta, 
+        bool simulation3D, float minColor[4], float maxColor[4], 
+        unsigned int renderMethod, float bodyRadius) :   
     window(window),
-    shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
+    meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
+    pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
     boundingBoxFirstStepShader(
         simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxFirstStep3D.glsl"    : "src/shaders/computeShaderQuadTree/boundingBoxFirstStep2D.glsl",
@@ -46,7 +51,9 @@ Simulation::Simulation(Window &window, unsigned int computationMethod, unsigned 
     mass(mass),
     G(G),              
     theta(theta),
-    simulation3D(simulation3D),            
+    simulation3D(simulation3D),
+    renderMethod(renderMethod),     
+    bodyRadius(bodyRadius),       
     minColor(glm::vec3(minColor[0], minColor[1], minColor[2])),
     maxColor(glm::vec3(maxColor[0], maxColor[1], maxColor[2]))    
     {
@@ -90,9 +97,8 @@ void Simulation::generateRandomStarData() {
 }
 
 Mesh Simulation::generateMesh() {
-    // Create circle mesh and load the star data into the mesh SSBO
-    //mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
-    mesh.createSphere(0.002f, 1.0f, 1.0f, 1.0f);
+    // Create sphere mesh and load the star data into the mesh SSBO
+    mesh.createSphere(bodyRadius, 1.0f, 1.0f, 1.0f);
     return mesh;
 }
 
@@ -141,23 +147,32 @@ void Simulation::run() {
         // Render and active shader program
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shader.use();
+        meshShader.use();
 
         // pass projection matrix to shader 
         glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
-
-        // pass view matrix to shader
         glm::mat4 view = window.camera.GetViewMatrix();
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, &view[0][0]);
 
-        // Pass color gradient configurations to shader 
-        glUniform1f(glGetUniformLocation(shader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
-        glUniform3f(glGetUniformLocation(shader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
-        glUniform3f(glGetUniformLocation(shader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
-
-        // Draw
-        mesh.drawSSBO();
+        if (renderMethod == 0) {
+            meshShader.use();
+            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+            glUniform1f(glGetUniformLocation(meshShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+            glUniform3f(glGetUniformLocation(meshShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+            glUniform3f(glGetUniformLocation(meshShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+            mesh.drawSSBOMesh();
+        } else {
+            pointShader.use();
+            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+            glUniform1f(glGetUniformLocation(pointShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+            glUniform3f(glGetUniformLocation(pointShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+            glUniform3f(glGetUniformLocation(pointShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+            glUniform1f(glGetUniformLocation(pointShader.ID, "bodyRadius"), bodyRadius);
+            glUniform1f(glGetUniformLocation(pointShader.ID, "fovY"), glm::radians(window.camera.zoom));
+            glUniform1f(glGetUniformLocation(pointShader.ID, "viewportHeight"), (float)window.height);
+            mesh.drawSSBOPoints();
+        }
 
         // Swap buffers and update window title
         std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime - startingTime);
@@ -396,7 +411,8 @@ glm::vec3 Simulation::computeCenterOfMass() {
 void Simulation::terminate() {
     // De-allocate Resources
     mesh.terminate();
-    shader.destroy();
+    meshShader.destroy();
+    pointShader.destroy();
     computeShader.destroy();
 
     // Reset Title

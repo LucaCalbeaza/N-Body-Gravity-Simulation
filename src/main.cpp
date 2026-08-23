@@ -14,15 +14,18 @@ const int simulationHeight = 1000;
 int main() {
     Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
     GUI gui(window);
+    GUI::inputParameters parameters;
 
     while (!glfwWindowShouldClose(window.window)) {
         glfwSetWindowSize(window.window, guiWidth, guiHeight);
-        GUI::inputParameters parameters = gui.run(window, guiWidth, guiHeight);
+        std::cout << "N: " << parameters.n << std::endl;
+        gui.parameters = parameters;
+        parameters = gui.run(window, guiWidth, guiHeight);
 
         if (!parameters.startSimulation) {
             break;
         }
-        
+
         window.resetCamera(parameters.window3D);
         glfwSetWindowSize(window.window, simulationWidth, simulationHeight);
 
@@ -31,8 +34,11 @@ int main() {
             parameters.n, parameters.mass, 
             parameters.G, parameters.theta, 
             parameters.simulation3D, parameters.minColor, 
-            parameters.maxColor);
+            parameters.maxColor, parameters.renderMethod,
+            parameters.bodySize);
+        
         window.returnToMenu = false;
+        std::cout << "N: " << parameters.n << std::endl;
     }
 
     window.terminate();

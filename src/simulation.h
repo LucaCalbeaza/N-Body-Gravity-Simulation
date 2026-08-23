@@ -28,9 +28,14 @@ public:
     Window &window; 
     Mesh mesh;
     bool simulation3D;
+    unsigned int renderMethod; 
+    float bodyRadius;
 
-    // Shaders
-    Shader shader;
+    // Graphic Shaders
+    Shader meshShader;
+    Shader pointShader;
+
+    // Computation Shaders
     Shader computeShader;
     Shader boundingBoxFirstStepShader;
     Shader boundingBoxSecondStepShader;
@@ -72,7 +77,11 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, unsigned int computationMethod, unsigned int n, float mass, float G, float theta, bool simulation3D, float minColor[4], float maxColor[4]);
+    Simulation(
+        Window &window, unsigned int computationMethod, 
+        unsigned int n, float mass, float G, float theta, 
+        bool simulation3D, float minColor[4], float maxColor[4], 
+        unsigned int renderMethod, float bodySize);
 
 private:
     /**

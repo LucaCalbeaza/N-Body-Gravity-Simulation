@@ -23,10 +23,12 @@ public:
         float G = 0.1;
         float theta = 0.5;
         int computationMethod = 0;
+        int renderMethod = 1;
         int startingCondtion = 0;
         int cameraCondition = 0;
         float minColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};  
-        float maxColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};  
+        float maxColor[4] = {1.0f, 1.0f, 1.0f, 1.0f}; 
+        float bodySize = 0.005f; 
     };
 
     // ------ GUI -------------

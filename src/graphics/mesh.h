@@ -75,7 +75,7 @@ public:
     int n;
 
     // Standard Buffers and Arrays
-    GLuint VBO, VAO, EBO, iVBO, SSBO;
+    GLuint VBO, VAO, EBO, iVBO, SSBO, pointVAO;
 
     // Barnes-Hut Compute Shader Buffers & int variables;
     GLuint sortedIdxBuf, mortonCodeBuf, nodesBuf, nextFreeNodeBuf, scenceBoundsBuf;
@@ -119,7 +119,14 @@ public:
     /**
      * Renders the mesh at the positions given in the SSBO
      */
-    void drawSSBO();
+    void drawSSBOMesh();
+
+    /**
+     * Renders bodies directly as GL_POINTS, with the positions
+     * and velocity given in the SSBO. Rendered as points with 
+     * additive blending glows around them. 
+     */
+    void drawSSBOPoints();
 
     /**
      * Sets the vertoces and indices of the mesh to represent 
