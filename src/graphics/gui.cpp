@@ -5,8 +5,9 @@
 
 #include "gui.h"
 
-GUI::GUI(Window &window) {
+GUI::GUI(Window &window, inputParameters parameters) {
     // Create Context
+    this->parameters = parameters;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;

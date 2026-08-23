@@ -38,7 +38,7 @@ public:
      * imGUI Constructor: Creates a new imGUI window context 
      * onto the given window. 
      */
-    GUI(Window &window);
+    GUI(Window &window, inputParameters parameters);
 
     /**
      * Cycle a new Dear ImGui frame. 
