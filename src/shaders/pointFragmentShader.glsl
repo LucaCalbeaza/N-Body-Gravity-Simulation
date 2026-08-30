@@ -11,7 +11,12 @@ void main() {
 
     if (dist > 1.0) discard;
 
-    // Hot core, soft falloff toward the edge - gives the "star" look
-    float glow = pow(1.0 - dist, 2.5);
+    // Bright core coloring
+    float core = pow(clamp(1.0 - dist, 0.0, 1.0), 8.0);
+
+    // Outer Halo colouring 
+    float halo = pow(clamp(1.0 - dist, 0.0, 1.0), 2.0) * 0.35;
+
+    float glow = core + halo;
     FragColor = vec4(ourColor * pointIntensity * glow, glow);
 }

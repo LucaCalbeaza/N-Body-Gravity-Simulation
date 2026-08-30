@@ -37,6 +37,6 @@ void main() {
     // clamped so points never vanish or blow up.
     float dist = max(-viewPos.z, 0.001);
     float pixelDiameter = (bodyRadius * viewportHeight) / (dist * tan(fovY * 0.5));
-    gl_PointSize = clamp(pixelDiameter, 1.0, 64.0);
+    gl_PointSize = clamp(pixelDiameter, 1.0, 64.0) * 2.0f;
     pointIntensity = clamp(0.5 + 0.5 * normalizedSpeed, 0.0, 1.0);
 }
