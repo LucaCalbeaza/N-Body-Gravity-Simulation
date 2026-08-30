@@ -8,27 +8,60 @@
 #include "omp.h"
 
 
-Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta) :   
-    window(screenWidth, screenHeight, "N-Body Orbital Simulation"),
-    shader("src/shaders/vertexShader.glsl", "src/shaders/fragmentShader.glsl"),
-    computeShader("src/shaders/computeShaderBruteForce.glsl"),
-    boundingBoxFirstStepShader("src/shaders/computeShaderQuadTree/boundingBoxFirstStep.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
-    boundingBoxSecondStepShader("src/shaders/computeShaderQuadTree/boundingBoxSecondStep.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
-    mortonCodeGenerationShader("src/shaders/computeShaderQuadTree/mortonCodeGeneration.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
-    bitonicSortShader("src/shaders/computeShaderQuadTree/bitonicSort.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
-    quadTreeBuildShader("src/shaders/computeShaderQuadTree/quadTreeBuild.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
-    centerOfMassReductionShader("src/shaders/computeShaderQuadTree/centerOfMassReduction.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
-    accelerationComputationShader("src/shaders/computeShaderQuadTree/accelerationComputation.glsl", "src/shaders/computeShaderQuadTree/common.glsl", 1),
+Simulation::Simulation(
+        Window &window, unsigned int computationMethod, 
+        unsigned int n, float mass, float G, float theta, 
+        bool simulation3D, float minColor[4], float maxColor[4], 
+        unsigned int renderMethod, float bodyRadius) :   
+    window(window),
+    meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
+    pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),
+    computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
+    boundingBoxFirstStepShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxFirstStep3D.glsl"    : "src/shaders/computeShaderQuadTree/boundingBoxFirstStep2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
+    boundingBoxSecondStepShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxSecondStep3D.glsl"   : "src/shaders/computeShaderQuadTree/boundingBoxSecondStep2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
+    mortonCodeGenerationShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/mortonCodeGeneration3D.glsl"    : "src/shaders/computeShaderQuadTree/mortonCodeGeneration2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
+    bitonicSortShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/bitonicSort3D.glsl"             : "src/shaders/computeShaderQuadTree/bitonicSort2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
+    quadTreeBuildShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/octTreeBuild3D.glsl"            : "src/shaders/computeShaderQuadTree/quadTreeBuild2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
+    centerOfMassReductionShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/centerOfMassReduction3D.glsl"   : "src/shaders/computeShaderQuadTree/centerOfMassReduction2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
+    accelerationComputationShader(
+        simulation3D ? "src/shaders/computeShaderOctTree/accelerationComputation3D.glsl" : "src/shaders/computeShaderQuadTree/accelerationComputation2D.glsl",
+        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        1),
     mesh(std::vector<float>(), std::vector<unsigned int>(), n),
+    computationMethod(computationMethod),
     n(n),
     mass(mass),
-    G(G),
-    screenSize(screenWidth),               
-    theta(theta)            {
+    G(G),              
+    theta(theta),
+    simulation3D(simulation3D),
+    renderMethod(renderMethod),     
+    bodyRadius(bodyRadius),       
+    minColor(glm::vec3(minColor[0], minColor[1], minColor[2])),
+    maxColor(glm::vec3(maxColor[0], maxColor[1], maxColor[2]))    
+    {
     
     // Time Variables : FPS Update Rate
-    dt = 1.0 / fps; 
-    lastFrameTime = glfwGetTime();
+    dt = 1.0 / 60.0f; 
+    startingTime = (int)glfwGetTime();
+    lastFrameTime = startingTime;
 
     // Reserve Star Variables
     innerBodies.reserve(n);
@@ -36,17 +69,17 @@ Simulation::Simulation(unsigned int screenWidth, unsigned int screenHeight, floa
     positions.reserve(n);
     
     // Generate Mesh and Star Data
-    generateStarData();
+    generateRandomStarData();
     generateMesh();
     mesh.loadBodies(stars);
-    mesh.initBarnesHutTree();
+    mesh.initBarnesHutTree(simulation3D);
 
     // Run Simulation
     run();
 }
 
 
-void Simulation::generateStarData() {
+void Simulation::generateRandomStarData() {
     // Create RNG device set between [-1.0f, 1.0f]
     std::random_device randomDevice;
     std::mt19937 gen(randomDevice());
@@ -55,8 +88,8 @@ void Simulation::generateStarData() {
     // Generate n stars with random initial {x,y} positions between
     // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
     for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen),  0);
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen),  0.0f);
+        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), (simulation3D) ? genRandom(gen) : 0);
+        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
         Body star(position, veloctiy, acceleration, mass/n);
         stars.push_back(star);
@@ -64,17 +97,14 @@ void Simulation::generateStarData() {
 }
 
 Mesh Simulation::generateMesh() {
-    // Create circle mesh and load the star data into the mesh SSBO
-    mesh.createCircle(0.001f, 10, 1.0f, 1.0f, 1.0f);
+    // Create sphere mesh and load the star data into the mesh SSBO
+    mesh.createSphere(bodyRadius, 1.0f, 1.0f, 1.0f);
     return mesh;
 }
 
 void Simulation::run() {
     // While loop runs while the window remains open
-    while(!glfwWindowShouldClose(window.window)) {
-        // Register Input
-        window.processInput();
-
+    while(!glfwWindowShouldClose(window.window) && !window.returnToMenu) {
         // Frame time calculation
         float currentFrameTime = glfwGetTime();
         float frameTime = currentFrameTime - lastFrameTime;
@@ -94,13 +124,19 @@ void Simulation::run() {
             fpsElapsedTime = 0.0f;
         }
 
+        // Register Input
+        window.processInput(frameTime);
+
         // Update the star data. Incase of frame drops update the star data 
         // multiple times to account for loss. Limit set to maxStepsPerFrame
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
         while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
-            updatePhysicsBarnesHutTreeComputeShader(theta);
-            //updatePhysicsBruteForceComputeShader();
+            if (computationMethod == 0) {
+                updatePhysicsBarnesHutTreeComputeShader(theta);
+            } else {
+                updatePhysicsBruteForceComputeShader();
+            }
             frameTimeAccumulation -= dt;
             steps++;
             if (steps == maxStepsPerFrame) {
@@ -110,20 +146,36 @@ void Simulation::run() {
 
         // Render and active shader program
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        shader.use();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        meshShader.use();
 
-        // Bind position data and Draw | Only needed when using CPU computation
-        // positions.clear();
-        // for(unsigned int i = 0; i < n; i++) {
-        //     positions.push_back(stars[i].position);
-        // }
-        // mesh.drawInstanced(positions, shader);
+        // pass projection matrix to shader 
+        glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
+        glm::mat4 view = window.camera.GetViewMatrix();
 
-        mesh.drawSSBO();
+        if (renderMethod == 0) {
+            meshShader.use();
+            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+            glUniform1f(glGetUniformLocation(meshShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+            glUniform3f(glGetUniformLocation(meshShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+            glUniform3f(glGetUniformLocation(meshShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+            mesh.drawSSBOMesh();
+        } else {
+            pointShader.use();
+            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+            glUniform1f(glGetUniformLocation(pointShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+            glUniform3f(glGetUniformLocation(pointShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+            glUniform3f(glGetUniformLocation(pointShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+            glUniform1f(glGetUniformLocation(pointShader.ID, "bodyRadius"), bodyRadius);
+            glUniform1f(glGetUniformLocation(pointShader.ID, "fovY"), glm::radians(window.camera.zoom));
+            glUniform1f(glGetUniformLocation(pointShader.ID, "viewportHeight"), (float)window.height);
+            mesh.drawSSBOPoints();
+        }
 
         // Swap buffers and update window title
-        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime);
+        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime - startingTime);
         window.update(title.c_str());    
     }
     terminate();
@@ -272,10 +324,17 @@ void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
     }
 
     // Initialize tree root Node: 
-    float sceneBounds[4];
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.scenceBoundsBuf);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(sceneBounds), sceneBounds);
-    mesh.resetBarnesHutTree(sceneBounds);
+    if (simulation3D) {
+        float sceneBounds[8];
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.scenceBoundsBuf);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(sceneBounds), sceneBounds);
+        mesh.resetBarnesHutTree(sceneBounds, simulation3D);
+    } else {
+        float sceneBounds[4];
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mesh.scenceBoundsBuf);
+        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(sceneBounds), sceneBounds);
+        mesh.resetBarnesHutTree(sceneBounds, simulation3D);
+    }
 
 
     // Quad Tree Build
@@ -352,9 +411,11 @@ glm::vec3 Simulation::computeCenterOfMass() {
 void Simulation::terminate() {
     // De-allocate Resources
     mesh.terminate();
-    shader.destroy();
+    meshShader.destroy();
+    pointShader.destroy();
     computeShader.destroy();
 
-    // Terminate GLFW
-    window.terminate();
+    // Reset Title
+    std::string title = "N-Body Orbital Simulation";
+    window.update(title.c_str()); 
 }

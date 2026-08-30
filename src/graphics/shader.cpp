@@ -221,18 +221,6 @@ void Shader::use() {
     glUseProgram(ID);
 }
 
-void Shader::setVec4f(const std::string &name, float x, float y, float z, float w) const {
-    glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
-}
-
-void Shader::setVec4b(const std::string &name, bool x, bool y, bool z, bool w) const {
-    glUniform4i(glGetUniformLocation(ID, name.c_str()), (int)x, (int)y, (int)z, (int)w);
-}
-
-void Shader::setVec4i(const std::string &name, int x, int y, int z, int w) const {
-    glUniform4i(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
-}
-
 void Shader::destroy() {
     glDeleteProgram(ID);
 }

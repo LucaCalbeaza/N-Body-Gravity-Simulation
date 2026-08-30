@@ -2,32 +2,42 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "cppbuild",
+      "type": "shell",
       "label": "Build OpenGL Project",
-      "command": "g++",
+      "command": "mingw32-make",
       "args": [
-        "-g",
-        "-fopenmp",
-        "-O3",
-        "-std=c++17",
-        "${workspaceFolder}/src/*.cpp",
-        "${workspaceFolder}/src/graphics/*.cpp",
-        "${workspaceFolder}/src/physics/*.cpp",
-        "${workspaceFolder}/src/glad.c",
-        "-I${workspaceFolder}/include",
-        "-L${workspaceFolder}/lib",
-        "-o",
-        "${workspaceFolder}/main.exe",
-        "-lglfw3",
-        "-lopengl32",
-        "-lgdi32",
-        "-luser32",
-        "-lkernel32"
+        "-j${env:NUMBER_OF_PROCESSORS}"
       ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "group": {
         "kind": "build",
         "isDefault": true
-      }
+      },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "type": "shell",
+      "label": "Clean Build",
+      "command": "mingw32-make",
+      "args": ["clean"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "label": "Rebuild (Clean + Build)",
+      "command": "mingw32-make",
+      "args": ["rebuild"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": ["$gcc"]
     }
   ]
 }

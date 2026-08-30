@@ -1,9 +1,44 @@
 #include <iostream>
 #include "simulation.h"
+#include "graphics/window.h"
+#include "graphics/gui.h"
+
+// Window Parameters
+const int guiWidth = 1000;
+const int guiHeight = 1000;
+const int simulationWidth = 1000;
+const int simulationHeight = 1000;
 
 
 // Main Class
 int main() {
-    Simulation simulation(1000, 1000, 60.0f, 100000, 1.0f, 0.1f, 0.5f);
+    Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
+    GUI::inputParameters parameters;
+
+    while (!glfwWindowShouldClose(window.window)) {
+        glfwSetWindowSize(window.window, guiWidth, guiHeight);
+        GUI gui(window, parameters);
+        parameters = gui.run(window, guiWidth, guiHeight);
+        gui.terminate();
+
+        if (!parameters.startSimulation) {
+            break;
+        }
+
+        window.resetCamera(parameters.window3D);
+        glfwSetWindowSize(window.window, simulationWidth, simulationHeight);
+
+        Simulation simulation(
+            window, parameters.computationMethod, 
+            parameters.n, parameters.mass, 
+            parameters.G, parameters.theta, 
+            parameters.simulation3D, parameters.minColor, 
+            parameters.maxColor, parameters.renderMethod,
+            parameters.bodySize);
+        
+        window.returnToMenu = false;
+    }
+
+    window.terminate();
     return 0;
 }

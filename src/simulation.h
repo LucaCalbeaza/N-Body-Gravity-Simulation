@@ -12,6 +12,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "graphics/shader.h"
 #include "graphics/window.h"
 #include "graphics/mesh.h"
@@ -21,12 +25,17 @@
 class Simulation {
 public:
     // Graphic Properties
-    Window window; 
+    Window &window; 
     Mesh mesh;
-    unsigned int screenSize;
+    bool simulation3D;
+    unsigned int renderMethod; 
+    float bodyRadius;
 
-    // Shaders
-    Shader shader;
+    // Graphic Shaders
+    Shader meshShader;
+    Shader pointShader;
+
+    // Computation Shaders
     Shader computeShader;
     Shader boundingBoxFirstStepShader;
     Shader boundingBoxSecondStepShader;
@@ -38,6 +47,7 @@ public:
 
 
     // Time and Frame Count Properties
+    int startingTime;
     float dt;
     float frameTimeAccumulation = 0.0;
     float lastFrameTime;
@@ -46,7 +56,7 @@ public:
     float fpsElapsedTime = 0.0f;
     float currentFPS = 0.0f;
 
-    // Physical Properties
+    // Physical & Computation Properties
     std::vector<Body> stars;
     std::vector<int> innerBodies;
     std::vector<int> outerBodies;
@@ -57,13 +67,21 @@ public:
     const float rSoft = 0.05f;
     float boundaryRadius = 2.0f;
     float theta;
+    unsigned int computationMethod;
+    float maxSpeedThreshold = 1.0f;
+    glm::vec3 minColor;
+    glm::vec3 maxColor;
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(unsigned int screenWidth, unsigned int screenHeight, float fps, unsigned int n, float mass, float G, float theta);
+    Simulation(
+        Window &window, unsigned int computationMethod, 
+        unsigned int n, float mass, float G, float theta, 
+        bool simulation3D, float minColor[4], float maxColor[4], 
+        unsigned int renderMethod, float bodySize);
 
 private:
     /**
@@ -75,7 +93,7 @@ private:
      * Adds n random stars to with randomized initial positions and 
      * initial velocity to the simulation.
      */
-    void generateStarData();
+    void generateRandomStarData();
 
     /**
      * Runs the simulation updating and drawing the stars on 

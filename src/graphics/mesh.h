@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "shader.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -36,12 +37,26 @@ public:
         MeshBody(const Body& body);
     };
 
-    // GpuNode structure on the CPU. Mimics the field layout of the 
-    // GPU structure exactly. 
-    struct GpuNodeCPU {
+    // 2D GpuNode structure on the CPU. Mimics the field layout of the 
+    // GPU structure exactly in common2D.glsl. 
+    struct GpuNodeCPU2D {
         float comAndMass[4];
         float centerAndSize[4];
         int32_t children[4];
+        int32_t bodyIndex;
+        int32_t rangeStart;
+        int32_t rangeEnd;
+        int32_t checkInCount;
+        int32_t childCount;
+        int32_t _pad0, _pad1, _pad2;
+    };
+
+    // 3D GpuNode structure on the CPU. Mimics the field layout of the 
+    // GPU structure exactly in common3D.glsl.
+    struct GpuNodeCPU3D {
+        float comAndMass[4];
+        float centerAndSize[4];
+        int32_t children[8];
         int32_t bodyIndex;
         int32_t rangeStart;
         int32_t rangeEnd;
@@ -60,7 +75,7 @@ public:
     int n;
 
     // Standard Buffers and Arrays
-    GLuint VBO, VAO, EBO, iVBO, SSBO;
+    GLuint VBO, VAO, EBO, iVBO, SSBO, pointVAO;
 
     // Barnes-Hut Compute Shader Buffers & int variables;
     GLuint sortedIdxBuf, mortonCodeBuf, nodesBuf, nextFreeNodeBuf, scenceBoundsBuf;
@@ -88,13 +103,13 @@ public:
      * Initializes the Barnes-Hut Tree variables and all of the 
      * SSBO buffers.
      */
-    void initBarnesHutTree();
+    void initBarnesHutTree(bool is3D);
 
     /**
      * Resets the Barnes-Hut root node and also resets the 
      * buffer data for several of the buffers. 
      */
-    void resetBarnesHutTree(const float sceneBounds[4]);
+    void resetBarnesHutTree(const float sceneBounds[8], bool is3D);
 
     /**
      * Renders the given mesh at each of the given positions
@@ -104,7 +119,14 @@ public:
     /**
      * Renders the mesh at the positions given in the SSBO
      */
-    void drawSSBO();
+    void drawSSBOMesh();
+
+    /**
+     * Renders bodies directly as GL_POINTS, with the positions
+     * and velocity given in the SSBO. Rendered as points with 
+     * additive blending glows around them. 
+     */
+    void drawSSBOPoints();
 
     /**
      * Sets the vertoces and indices of the mesh to represent 
@@ -112,6 +134,12 @@ public:
      * RGB color.
      */
     void createCircle(float radius, unsigned int numVertices, float red, float green, float blue);
+
+     /**
+     * Sets the vertoces and indices of the mesh to represent 
+     * an icosphere of 12 vertices with the given radius, and RGB color.
+     */
+    void createSphere(float radius, float red, float green, float blue);
 
     /**
      * Deletes Buffers and arrays.
