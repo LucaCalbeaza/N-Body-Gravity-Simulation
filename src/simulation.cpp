@@ -8,54 +8,51 @@
 #include "omp.h"
 
 
-Simulation::Simulation(
-        Window &window, unsigned int computationMethod, 
-        unsigned int n, float mass, float G, float theta, 
-        bool simulation3D, float minColor[4], float maxColor[4], 
-        unsigned int renderMethod, float bodyRadius) :   
+Simulation::Simulation(Window &window, GUI::inputParameters parameters) :   
     window(window),
     meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
     pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),
     computeShader("src/shaders/computeShaderBruteForceTiled.glsl"),
     boundingBoxFirstStepShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxFirstStep3D.glsl"    : "src/shaders/computeShaderQuadTree/boundingBoxFirstStep2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxFirstStep3D.glsl"    : "src/shaders/computeShaderQuadTree/boundingBoxFirstStep2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     boundingBoxSecondStepShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxSecondStep3D.glsl"   : "src/shaders/computeShaderQuadTree/boundingBoxSecondStep2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/boundingBoxSecondStep3D.glsl"   : "src/shaders/computeShaderQuadTree/boundingBoxSecondStep2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     mortonCodeGenerationShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/mortonCodeGeneration3D.glsl"    : "src/shaders/computeShaderQuadTree/mortonCodeGeneration2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/mortonCodeGeneration3D.glsl"    : "src/shaders/computeShaderQuadTree/mortonCodeGeneration2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     bitonicSortShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/bitonicSort3D.glsl"             : "src/shaders/computeShaderQuadTree/bitonicSort2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/bitonicSort3D.glsl"             : "src/shaders/computeShaderQuadTree/bitonicSort2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     quadTreeBuildShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/octTreeBuild3D.glsl"            : "src/shaders/computeShaderQuadTree/quadTreeBuild2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/octTreeBuild3D.glsl"            : "src/shaders/computeShaderQuadTree/quadTreeBuild2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     centerOfMassReductionShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/centerOfMassReduction3D.glsl"   : "src/shaders/computeShaderQuadTree/centerOfMassReduction2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/centerOfMassReduction3D.glsl"   : "src/shaders/computeShaderQuadTree/centerOfMassReduction2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
     accelerationComputationShader(
-        simulation3D ? "src/shaders/computeShaderOctTree/accelerationComputation3D.glsl" : "src/shaders/computeShaderQuadTree/accelerationComputation2D.glsl",
-        simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/accelerationComputation3D.glsl" : "src/shaders/computeShaderQuadTree/accelerationComputation2D.glsl",
+        parameters.simulation3D ? "src/shaders/computeShaderOctTree/common3D.glsl"                  : "src/shaders/computeShaderQuadTree/common2D.glsl",
         1),
-    mesh(std::vector<float>(), std::vector<unsigned int>(), n),
-    computationMethod(computationMethod),
-    n(n),
-    mass(mass),
-    G(G),              
-    theta(theta),
-    simulation3D(simulation3D),
-    renderMethod(renderMethod),     
-    bodyRadius(bodyRadius),       
-    minColor(glm::vec3(minColor[0], minColor[1], minColor[2])),
-    maxColor(glm::vec3(maxColor[0], maxColor[1], maxColor[2]))    
+    mesh(std::vector<float>(), std::vector<unsigned int>(), parameters.n),
+    computationMethod(parameters.computationMethod),
+    startingCondtion(parameters.startingCondtion),
+    n(parameters.n),
+    mass(parameters.mass),
+    G(parameters.G),              
+    theta(parameters.theta),
+    simulation3D(parameters.simulation3D),
+    renderMethod(parameters.renderMethod),     
+    bodyRadius(parameters.bodyRadius),       
+    minColor(glm::vec3(parameters.minColor[0], parameters.minColor[1], parameters.minColor[2])),
+    maxColor(glm::vec3(parameters.maxColor[0], parameters.maxColor[1], parameters.maxColor[2]))    
     {
     
     // Time Variables : FPS Update Rate
@@ -79,8 +76,11 @@ Simulation::Simulation(
 }
 
 void Simulation::generateStarData() {
-    //generateRandomStarData();
-    generateElipitcalPlummerData();
+    if (startingCondtion == 0) {
+        generateRandomStarData();
+    } else if (startingCondtion == 1) {
+        generateElipitcalPlummerData();
+    }
 }
 
 Mesh Simulation::generateMesh() {

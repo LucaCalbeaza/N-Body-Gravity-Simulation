@@ -17,6 +17,7 @@
 
 #include "graphics/shader.h"
 #include "graphics/window.h"
+#include "graphics/gui.h"
 #include "graphics/mesh.h"
 #include "physics/body.h"
 #include "physics/barnesHutTree.h"
@@ -67,6 +68,7 @@ public:
     float boundaryRadius = 2.0f;
     float theta;
     unsigned int computationMethod;
+    unsigned int startingCondtion;
     float maxSpeedThreshold = 1.0f;
     glm::vec3 minColor;
     glm::vec3 maxColor;
@@ -76,11 +78,7 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(
-        Window &window, unsigned int computationMethod, 
-        unsigned int n, float mass, float G, float theta, 
-        bool simulation3D, float minColor[4], float maxColor[4], 
-        unsigned int renderMethod, float bodySize);
+    Simulation(Window &window, GUI::inputParameters parameters);
 
 private:
     /**

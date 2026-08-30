@@ -42,7 +42,9 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGuiIO& io = ImGui::GetIO();
 
         ImFont* titleFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 48.0f);
-        ImFont* regularFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 28.0f);
+        ImFont* sectionFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 28.0f);
+        ImFont* regularFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 20.0f);
+        float sectionSeperation = 0.03f;
 
         ImGuiWindowFlags windowflags = ImGuiWindowFlags_NoMove
             | ImGuiWindowFlags_NoResize
@@ -61,14 +63,16 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("N-Body Simulation Setup").x) / 2);
         ImGui::Text("N-Body Simulation Setup");
         ImGui::PopFont();
-        ImGui::PushFont(regularFont);
 
 
 
         // Camera Condtion
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
+        ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Select Camera Configuration");
+        ImGui::PopFont();
 
+        ImGui::PushFont(regularFont);
         if (ImGui::RadioButton("3D Camera", parameters.cameraCondition == 0)) { 
             parameters.cameraCondition = 0;
             parameters.window3D = true;
@@ -79,15 +83,19 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
             parameters.window3D = false;
             parameters.startingCondtion = 0;
         }
+        ImGui::PopFont();
         
 
         // Particle Graphics and Render Method
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
+        ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Select Render Method");
-        ImGui::SameLine(ImGui::GetWindowSize().x * 0.70f); 
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.73f); 
         ImGui::TextWrapped("Select Velocity Color Gradient");
+        ImGui::PopFont();
         ImGui::Separator();
 
+        ImGui::PushFont(regularFont);
         if (ImGui::RadioButton("Mesh Body", parameters.renderMethod == 0)) { 
             parameters.renderMethod = 0;
         }
@@ -95,7 +103,7 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         if (ImGui::RadioButton("Point Body", parameters.renderMethod == 1)) { 
             parameters.renderMethod = 1;
         }
-        ImGui::SameLine(ImGui::GetWindowSize().x * 0.68f);
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.77f);
         ImGui::ColorEdit4("Min Velocity", parameters.minColor, colorPickerFlags);  
         ImGui::SameLine();
         ImGui::ColorEdit4("Max Velocity", parameters.maxColor, colorPickerFlags);
@@ -104,18 +112,22 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::Text("Body Size:");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
-        ImGui::SliderFloat("##Body Size", &parameters.bodySize, 0.001f, 0.025f);
+        ImGui::SliderFloat("##Body Size", &parameters.bodyRadius, 0.001f, 0.025f);
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::PopItemWidth();
+        ImGui::PopFont();
 
 
 
         // Simulation Parameters
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
+        ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Configure Simulation Parameters");
+        ImGui::PopFont();
         ImGui::Separator();
 
         // N Slider
+        ImGui::PushFont(regularFont);
         ImGui::Text("Number of Particles:");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
@@ -138,13 +150,17 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SliderFloat("##Gravitational Constant G", &parameters.G, 0.01f, 1.0f);
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::PopItemWidth();
+        ImGui::PopFont();
 
 
         // Computation Method
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
+        ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Select Computation Method");
+        ImGui::PopFont();
         ImGui::Separator();
         
+        ImGui::PushFont(regularFont);
         if (ImGui::RadioButton("Barnes-Hut Tree Computation", parameters.computationMethod == 0)) { 
             parameters.computationMethod = 0;
         }
@@ -163,30 +179,45 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::EndDisabled();
         ImGui::PopItemWidth();
+        ImGui::PopFont();
 
 
 
 
         // Starting Conditions
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::PushFont(sectionFont);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
         ImGui::TextWrapped("Select Starting Conditions");
+        ImGui::PopFont();
         ImGui::Separator();
-        if (ImGui::RadioButton("Random Generation 2D", parameters.startingCondtion == 0)) { 
-            parameters.startingCondtion = 0;
+
+        ImGui::PushFont(regularFont);
+        if (ImGui::RadioButton("2D Condition", parameters.simulation3D == 0)) { 
             parameters.simulation3D = false;
         }
         ImGui::SameLine();
-        ImGui::BeginDisabled(!parameters.window3D);
-        if (ImGui::RadioButton("Random Generation 3D", parameters.startingCondtion == 1)) { 
-            parameters.startingCondtion = 1; 
+        if (ImGui::RadioButton("3D Condition", parameters.simulation3D == 1)) {  
             parameters.simulation3D = true;
         }
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
+        ImGui::Separator();
+
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
+        if (ImGui::RadioButton("Random Generation", parameters.startingCondtion == 0)) { 
+            parameters.startingCondtion = 0;
+        }
+        ImGui::SameLine();
+        ImGui::BeginDisabled(!parameters.window3D);
+        if (ImGui::RadioButton("Elipitcal Galaxy", parameters.startingCondtion == 1)) { 
+            parameters.startingCondtion = 1; 
+        }
         ImGui::EndDisabled();
+        
 
 
         // Start Button
         ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::GetWindowSize().x * 0.5f) / 2);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.05f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation + 0.10f);
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.4f, 1.0f));
         if (ImGui::Button("Start Simulation", ImVec2(ImGui::GetWindowSize().x * 0.5f, 60))) {
             parameters.startSimulation = true;

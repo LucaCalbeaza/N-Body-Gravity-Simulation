@@ -10,6 +10,7 @@ const int simulationWidth = 1000;
 const int simulationHeight = 1000;
 
 
+
 // Main Class
 int main() {
     Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
@@ -28,13 +29,7 @@ int main() {
         window.resetCamera(parameters.window3D);
         glfwSetWindowSize(window.window, simulationWidth, simulationHeight);
 
-        Simulation simulation(
-            window, parameters.computationMethod, 
-            parameters.n, parameters.mass, 
-            parameters.G, parameters.theta, 
-            parameters.simulation3D, parameters.minColor, 
-            parameters.maxColor, parameters.renderMethod,
-            parameters.bodySize);
+        Simulation simulation(window, parameters);
         
         window.returnToMenu = false;
     }

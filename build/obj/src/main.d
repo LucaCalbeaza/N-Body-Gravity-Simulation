@@ -177,13 +177,12 @@ build/obj/src/main.o: src/main.cpp src/simulation.h include/glm/glm.hpp \
  include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp \
  include/glm/gtc/type_ptr.inl src/graphics/shader.h src/graphics/window.h \
  include/glad/glad.h include/KHR/khrplatform.h include/GLFW/glfw3.h \
- src/graphics/camera.h src/graphics/mesh.h src/graphics/shader.h \
- src/graphics/../physics/body.h src/physics/body.h \
- src/physics/barnesHutTree.h src/physics/body.h src/graphics/gui.h \
- src/graphics/window.h include/../include/imGUI/imgui.h \
- include/../include/imGUI/imconfig.h \
+ src/graphics/camera.h src/graphics/gui.h src/graphics/window.h \
+ include/../include/imGUI/imgui.h include/../include/imGUI/imconfig.h \
  include/../include/imGUI/imgui_impl_glfw.h \
- include/../include/imGUI/imgui_impl_opengl3.h
+ include/../include/imGUI/imgui_impl_opengl3.h src/graphics/mesh.h \
+ src/graphics/shader.h src/graphics/../physics/body.h src/physics/body.h \
+ src/physics/barnesHutTree.h src/physics/body.h
 src/simulation.h:
 include/glm/glm.hpp:
 include/glm/detail/_fixes.hpp:
@@ -384,15 +383,15 @@ include/glad/glad.h:
 include/KHR/khrplatform.h:
 include/GLFW/glfw3.h:
 src/graphics/camera.h:
-src/graphics/mesh.h:
-src/graphics/shader.h:
-src/graphics/../physics/body.h:
-src/physics/body.h:
-src/physics/barnesHutTree.h:
-src/physics/body.h:
 src/graphics/gui.h:
 src/graphics/window.h:
 include/../include/imGUI/imgui.h:
 include/../include/imGUI/imconfig.h:
 include/../include/imGUI/imgui_impl_glfw.h:
 include/../include/imGUI/imgui_impl_opengl3.h:
+src/graphics/mesh.h:
+src/graphics/shader.h:
+src/graphics/../physics/body.h:
+src/physics/body.h:
+src/physics/barnesHutTree.h:
+src/physics/body.h:

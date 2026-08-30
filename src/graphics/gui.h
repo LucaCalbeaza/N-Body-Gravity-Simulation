@@ -28,7 +28,7 @@ public:
         int cameraCondition = 0;
         float minColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};  
         float maxColor[4] = {1.0f, 1.0f, 1.0f, 1.0f}; 
-        float bodySize = 0.005f; 
+        float bodyRadius = 0.005f; 
     };
 
     // ------ GUI -------------
