@@ -6,10 +6,9 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#define _USE_MATH_DEFINES
 #include <random>
 #include <cmath>
-
-#define _USE_MATH_DEFINES
 #include <math.h>
 
 #include <glm/glm.hpp>
@@ -90,10 +89,10 @@ private:
     Mesh generateMesh();
 
     /**
-     * Adds n random stars to with randomized initial positions and 
-     * initial velocity to the simulation.
+     * Generates star data based on given initial condition
      */
-    void generateRandomStarData();
+    void generateStarData();
+
 
     /**
      * Runs the simulation updating and drawing the stars on 
@@ -130,6 +129,18 @@ private:
      * are made using the given theta threshold.
      */
     void updatePhysicsBarnesHutTreeComputeShader(float theta);
+
+    /**
+     * Adds n random stars to with randomized initial positions and 
+     * initial velocity to the simulation.
+     */
+    void generateRandomStarData();
+
+    /**
+     * Adds N stars to the simulation generated in 
+     * accordance to a Plummer density sphere 
+     */
+    void generateElipitcalPlummerData();
 
     /**
      * Return the center of mass of the stars in the system 
