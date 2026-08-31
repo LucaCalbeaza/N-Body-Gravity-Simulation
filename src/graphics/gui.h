@@ -16,7 +16,7 @@ public:
     // Simulation Parameters Structure
     struct inputParameters {
         bool startSimulation = false;
-        bool simulation3D = false;
+        bool simulation3D = true;
         bool window3D = true;
         int n = 10000;
         float mass = 1.0; 
@@ -25,6 +25,7 @@ public:
         int computationMethod = 0;
         int renderMethod = 1;
         int startingCondtion = 0;
+        int secondaryStartingCondition = 0; 
         int cameraCondition = 0;
         float minColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};  
         float maxColor[4] = {1.0f, 1.0f, 1.0f, 1.0f}; 

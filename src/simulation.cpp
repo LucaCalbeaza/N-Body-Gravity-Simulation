@@ -44,6 +44,7 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     mesh(std::vector<float>(), std::vector<unsigned int>(), parameters.n),
     computationMethod(parameters.computationMethod),
     startingCondtion(parameters.startingCondtion),
+    secondaryStartingCondtion(parameters.secondaryStartingCondition),
     n(parameters.n),
     mass(parameters.mass),
     G(parameters.G),              
@@ -79,7 +80,7 @@ void Simulation::generateStarData() {
     if (startingCondtion == 0) {
         generateRandomStarData();
     } else if (startingCondtion == 1) {
-        generateElipitcalPlummerData();
+        generateElipitcalPlummerData(secondaryStartingCondtion);
     }
 }
 
@@ -399,7 +400,7 @@ void Simulation::generateRandomStarData() {
     }
 }
 
-void Simulation::generateElipitcalPlummerData() {
+void Simulation::generateElipitcalPlummerData(int ellipseClass) {
     // Particle Parameters
     float scaleRadius = 0.5; 
     float radialClamp = 0.999f;
@@ -456,6 +457,20 @@ void Simulation::generateElipitcalPlummerData() {
         Body star(position, velocity, acceleration, particleMass);
         stars.push_back(star);
     }
+
+    // Flatten Ellipse according to class
+    ellipseClass = std::clamp(ellipseClass, 0, 8);
+    float axisRatio = 1.0f - (float)ellipseClass / 10.0f;
+    glm::vec3 stretch = glm::vec3(1.0f, 1.0f, axisRatio);
+
+    for (auto& star : stars) {
+        glm::vec3 stretchedPosition = star.position * stretch;
+        glm::vec3 stretchedVelocity = star.velocity * stretch;
+        
+        star.position = stretchedPosition;
+        star.velocity = stretchedVelocity;
+    }
+
 
     // Recenter
     glm::vec3 comPosition = glm::vec3(0.0f);

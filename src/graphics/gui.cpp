@@ -192,12 +192,12 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::Separator();
 
         ImGui::PushFont(regularFont);
-        if (ImGui::RadioButton("2D Condition", parameters.simulation3D == 0)) { 
-            parameters.simulation3D = false;
+        if (ImGui::RadioButton("3D Condition", parameters.simulation3D == 1)) { 
+            parameters.simulation3D = true;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("3D Condition", parameters.simulation3D == 1)) {  
-            parameters.simulation3D = true;
+        if (ImGui::RadioButton("2D Condition", parameters.simulation3D == 0)) {  
+            parameters.simulation3D = false;
         }
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
         ImGui::Separator();
@@ -207,11 +207,27 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
             parameters.startingCondtion = 0;
         }
         ImGui::SameLine();
-        ImGui::BeginDisabled(!parameters.window3D);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetWindowSize().x * 0.02f);
+        ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
         if (ImGui::RadioButton("Elipitcal Galaxy", parameters.startingCondtion == 1)) { 
             parameters.startingCondtion = 1; 
         }
+        ImGui::SameLine();
         ImGui::EndDisabled();
+
+        ImGui::BeginDisabled(parameters.startingCondtion != 1);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.50f, 0.0f));
+        ImGui::PushItemWidth(25.0f);
+        if (ImGui::BeginCombo("##SliderCombo", 0)) {
+            ImGui::Text("Elipitical Galaxy Class: ");
+            ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+            ImGui::PushItemWidth(-1.0f);
+            ImGui::SliderInt("##SliderInside", &parameters.secondaryStartingCondition, 0, 8);
+            ImGui::PopItemWidth();
+            ImGui::EndCombo();
+        }
+        ImGui::EndDisabled();
+
         
 
 

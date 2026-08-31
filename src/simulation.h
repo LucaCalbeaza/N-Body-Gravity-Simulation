@@ -10,6 +10,7 @@
 #include <random>
 #include <cmath>
 #include <math.h>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -69,6 +70,7 @@ public:
     float theta;
     unsigned int computationMethod;
     unsigned int startingCondtion;
+    unsigned int secondaryStartingCondtion;
     float maxSpeedThreshold = 1.0f;
     glm::vec3 minColor;
     glm::vec3 maxColor;
@@ -138,7 +140,7 @@ private:
      * Adds N stars to the simulation generated in 
      * accordance to a Plummer density sphere 
      */
-    void generateElipitcalPlummerData();
+    void generateElipitcalPlummerData(int ellipseClass);
 
     /**
      * Return the center of mass of the stars in the system 
