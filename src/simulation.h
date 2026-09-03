@@ -6,11 +6,11 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#define _USE_MATH_DEFINES
 #include <random>
 #include <cmath>
-
-#define _USE_MATH_DEFINES
 #include <math.h>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,6 +18,7 @@
 
 #include "graphics/shader.h"
 #include "graphics/window.h"
+#include "graphics/gui.h"
 #include "graphics/mesh.h"
 #include "physics/body.h"
 #include "physics/barnesHutTree.h"
@@ -68,6 +69,8 @@ public:
     float boundaryRadius = 2.0f;
     float theta;
     unsigned int computationMethod;
+    unsigned int startingCondtion;
+    unsigned int secondaryStartingCondtion;
     float maxSpeedThreshold = 1.0f;
     glm::vec3 minColor;
     glm::vec3 maxColor;
@@ -77,11 +80,7 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(
-        Window &window, unsigned int computationMethod, 
-        unsigned int n, float mass, float G, float theta, 
-        bool simulation3D, float minColor[4], float maxColor[4], 
-        unsigned int renderMethod, float bodySize);
+    Simulation(Window &window, GUI::inputParameters parameters);
 
 private:
     /**
@@ -90,10 +89,10 @@ private:
     Mesh generateMesh();
 
     /**
-     * Adds n random stars to with randomized initial positions and 
-     * initial velocity to the simulation.
+     * Generates star data based on given initial condition
      */
-    void generateRandomStarData();
+    void generateStarData();
+
 
     /**
      * Runs the simulation updating and drawing the stars on 
@@ -130,6 +129,18 @@ private:
      * are made using the given theta threshold.
      */
     void updatePhysicsBarnesHutTreeComputeShader(float theta);
+
+    /**
+     * Adds n random stars to with randomized initial positions and 
+     * initial velocity to the simulation.
+     */
+    void generateRandomStarData();
+
+    /**
+     * Adds N stars to the simulation generated in 
+     * accordance to a Plummer density sphere 
+     */
+    void generateElipitcalPlummerData(int ellipseClass);
 
     /**
      * Return the center of mass of the stars in the system 
