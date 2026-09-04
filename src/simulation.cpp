@@ -78,7 +78,7 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
 
 void Simulation::generateStarData() {
     if (startingCondtion == 0) {
-        generateRandomStarData();
+        generateUniformDistributionData();
     } else if (startingCondtion == 1) {
         generateElipitcalPlummerData(secondaryStartingCondtion);
     }
@@ -383,20 +383,44 @@ void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 }
 
-void Simulation::generateRandomStarData() {
-    // Create RNG device set between [-1.0f, 1.0f]
+void Simulation::generateUniformDistributionData() {
+    // Create RNG device set
     std::random_device randomDevice;
     std::mt19937 gen(randomDevice());
-    std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
+    if (secondaryStartingCondtion == 0) {
+        // Create a random distribution between [-1.0f, 1.0f]
+        std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
 
-    // Generate n stars with random initial {x,y} positions between
-    // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
-    for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), (simulation3D) ? genRandom(gen) : 0);
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
-        glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-        Body star(position, veloctiy, acceleration, mass/n);
-        stars.push_back(star);
+        // Generate n stars with random initial {x,y} positions between
+        // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
+        for (int i = 0; i < n; i++) {
+            glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), (simulation3D) ? genRandom(gen) : 0);
+            glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
+            glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
+            Body star(position, veloctiy, acceleration, mass/n);
+            stars.push_back(star);
+        }
+    } else {
+        // Create a random distribution for spherical coordinates
+        std::uniform_real_distribution<float> genRadius(0.0f, 1.0f);
+        std::uniform_real_distribution<float> genTheta(0.0f, 2.0f * M_PI);
+        std::uniform_real_distribution<float> genCosPhi(-1.0f, 1.0f);
+        std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
+
+        for (int i = 0; i < n; i++) {
+            float radius = (simulation3D) ? std::cbrt(genRadius(gen)) : std::sqrt(genRadius(gen)); 
+            float theta = genTheta(gen);
+            float phi = (simulation3D) ? acos(genCosPhi(gen)) : 0.0f;
+            float x = (simulation3D) ? radius * sin(phi) * cos(theta) : radius * cos(theta);
+            float y = (simulation3D) ? radius * sin(phi) * sin(theta) : radius * sin(theta);
+            float z = (simulation3D) ? radius * cos(phi) : 0;
+            glm::vec3 position = glm::vec3(x, y, z);
+            glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
+            glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
+            Body star(position, veloctiy, acceleration, mass/n);
+            stars.push_back(star);
+        }
+
     }
 }
 

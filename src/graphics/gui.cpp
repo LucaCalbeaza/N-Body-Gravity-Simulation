@@ -202,27 +202,52 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
         ImGui::Separator();
 
+
+
+        
+        // Random Generation Option
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
-        if (ImGui::RadioButton("Random Generation", parameters.startingCondtion == 0)) { 
+        if (ImGui::RadioButton("Random Uniform Distribution", parameters.startingCondtion == 0)) { 
             parameters.startingCondtion = 0;
         }
+
+        // Random Generation Dropdown Box
+        ImGui::BeginDisabled(parameters.startingCondtion != 0);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.50f, 0.0f));
+        ImGui::PushItemWidth(25.0f);
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##RandomGenSliderCombo", 0)) {
+            if (ImGui::RadioButton("Cubical", parameters.secondaryStartingCondition == 0)) { 
+                parameters.secondaryStartingCondition = 0;
+            }
+            if (ImGui::RadioButton("Spherical", parameters.secondaryStartingCondition == 1)) { 
+                parameters.secondaryStartingCondition = 1;
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::EndDisabled();
+        
+        
+        
+        // Ellipitcal Galaxy Option
         ImGui::SameLine();
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetWindowSize().x * 0.02f);
         ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
         if (ImGui::RadioButton("Elipitcal Galaxy", parameters.startingCondtion == 1)) { 
             parameters.startingCondtion = 1; 
         }
-        ImGui::SameLine();
         ImGui::EndDisabled();
 
+        // Ellipitical Galaxy Dropdown Box
         ImGui::BeginDisabled(parameters.startingCondtion != 1);
         ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.50f, 0.0f));
         ImGui::PushItemWidth(25.0f);
-        if (ImGui::BeginCombo("##SliderCombo", 0)) {
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##EllipitcalSliderCombo", 0)) {
             ImGui::Text("Elipitical Galaxy Class: ");
             ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
             ImGui::PushItemWidth(-1.0f);
-            ImGui::SliderInt("##SliderInside", &parameters.secondaryStartingCondition, 0, 8);
+            ImGui::SliderInt("##EllipitcalSlider", &parameters.secondaryStartingCondition, 0, 8);
             ImGui::PopItemWidth();
             ImGui::EndCombo();
         }

@@ -134,7 +134,7 @@ private:
      * Adds n random stars to with randomized initial positions and 
      * initial velocity to the simulation.
      */
-    void generateRandomStarData();
+    void generateUniformDistributionData();
 
     /**
      * Adds N stars to the simulation generated in 
