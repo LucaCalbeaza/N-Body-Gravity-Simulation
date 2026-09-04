@@ -135,19 +135,27 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::PopItemWidth();
 
-        // Mass Slider
-        ImGui::Text("Total System Mass:");
+        // Solar Mass Slider
+        ImGui::Text("Total System Solar Mass (in Billions):");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
-        ImGui::SliderFloat("##Total System Mass", &parameters.mass, 0.1f, 2.0f);
+        ImGui::SliderFloat("##Total System Solar Mass", &parameters.billionSolarMass, 1.0f, 500.0f);
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::PopItemWidth();
 
-        // G Slider
-        ImGui::Text("Gravitational Constant G:");
+        // Galaxy Size Slider
+        ImGui::Text("Galaxy Size (kpc):");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
-        ImGui::SliderFloat("##Gravitational Constant G", &parameters.G, 0.01f, 1.0f);
+        ImGui::SliderFloat("##Galaxy Size", &parameters.genSizeKpc, 1.0f, 100.0f);
+        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::PopItemWidth();
+
+        // Timescale Slider
+        ImGui::Text("Timescale (myr/s):");
+        ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+        ImGui::PushItemWidth(-1.0f);
+        ImGui::SliderFloat("##Timescale", &parameters.timeScaleMyrPerSec, 1.0f, 200.0f);
         ImGui::SetItemTooltip("This is a simple text tooltip.");
         ImGui::PopItemWidth();
         ImGui::PopFont();

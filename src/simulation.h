@@ -57,23 +57,33 @@ public:
     float fpsElapsedTime = 0.0f;
     float currentFPS = 0.0f;
 
-    // Physical & Computation Properties
+    // Star Vectors
     std::vector<Body> stars;
     std::vector<int> innerBodies;
     std::vector<int> outerBodies;
     std::vector<glm::vec3> positions;
-    unsigned int n;
-    float mass;
+
+    // Simulation Constants
     float G;
-    const float rSoft = 0.05f;
+    float mass = 1.0f;
+    const float rSoft = 0.005f;
+    float maxSpeedThreshold = 1.0f;
     float boundaryRadius = 2.0f;
+    float G_REAL = 4.5e-12f;
+
+    // Simulation Input Parameters
+    unsigned int n;
+    float billionSolarMass;
+    float galaxyUnitSize;
+    float timeScale;
     float theta;
     unsigned int computationMethod;
     unsigned int startingCondtion;
     unsigned int secondaryStartingCondtion;
-    float maxSpeedThreshold = 1.0f;
     glm::vec3 minColor;
     glm::vec3 maxColor;
+
+
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 

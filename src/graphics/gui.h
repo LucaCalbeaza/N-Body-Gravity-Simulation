@@ -19,8 +19,9 @@ public:
         bool simulation3D = true;
         bool window3D = true;
         int n = 10000;
-        float mass = 1.0; 
-        float G = 0.1;
+        float billionSolarMass = 60.0f;
+        float genSizeKpc = 15.0f;
+        float timeScaleMyrPerSec = 20.0f;
         float theta = 0.5;
         int computationMethod = 0;
         int renderMethod = 1;

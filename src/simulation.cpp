@@ -46,8 +46,7 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     startingCondtion(parameters.startingCondtion),
     secondaryStartingCondtion(parameters.secondaryStartingCondition),
     n(parameters.n),
-    mass(parameters.mass),
-    G(parameters.G),              
+    timeScale(parameters.timeScaleMyrPerSec),           
     theta(parameters.theta),
     simulation3D(parameters.simulation3D),
     renderMethod(parameters.renderMethod),     
@@ -56,8 +55,11 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     maxColor(glm::vec3(parameters.maxColor[0], parameters.maxColor[1], parameters.maxColor[2]))    
     {
     
-    // Time Variables : FPS Update Rate
-    dt = 1.0 / 60.0f; 
+    // Scale Variables
+    galaxyUnitSize = parameters.genSizeKpc / 7.5;
+    float kpcPerUnit = parameters.genSizeKpc * 0.5f;
+    G = G_REAL * (parameters.billionSolarMass * 1e9f) / (kpcPerUnit * kpcPerUnit * kpcPerUnit);
+    dt = timeScale / 60.0f; 
     startingTime = (int)glfwGetTime();
     lastFrameTime = startingTime;
 
@@ -119,13 +121,13 @@ void Simulation::run() {
         // multiple times to account for loss. Limit set to maxStepsPerFrame
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
-        while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
+        while (frameTimeAccumulation >= (dt / timeScale) && steps < maxStepsPerFrame) {
             if (computationMethod == 0) {
                 updatePhysicsBarnesHutTreeComputeShader(theta);
             } else {
                 updatePhysicsBruteForceComputeShader();
             }
-            frameTimeAccumulation -= dt;
+            frameTimeAccumulation -= (dt / timeScale);
             steps++;
             if (steps == maxStepsPerFrame) {
                 frameTimeAccumulation = 0;
@@ -162,8 +164,8 @@ void Simulation::run() {
             mesh.drawSSBOPoints();
         }
 
-        // Swap buffers and update window title
-        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime - startingTime);
+        // Swap buffers and update window titleb
+        std::string title = "N-Body Gravity Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string(((int)currentFrameTime - startingTime) * (int)timeScale) + " Million years";
         window.update(title.c_str());    
     }
     terminate();
@@ -389,23 +391,22 @@ void Simulation::generateUniformDistributionData() {
     std::mt19937 gen(randomDevice());
     if (secondaryStartingCondtion == 0) {
         // Create a random distribution between [-1.0f, 1.0f]
-        std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
+        std::uniform_real_distribution<float> genSize(-galaxyUnitSize / 2, galaxyUnitSize / 2);
 
         // Generate n stars with random initial {x,y} positions between
         // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
         for (int i = 0; i < n; i++) {
-            glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), (simulation3D) ? genRandom(gen) : 0);
-            glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
+            glm::vec3 position = glm::vec3(genSize(gen),  genSize(gen), (simulation3D) ? genSize(gen) : 0);
+            glm::vec3 veloctiy = glm::vec3(0);
             glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
             Body star(position, veloctiy, acceleration, mass/n);
             stars.push_back(star);
         }
     } else {
         // Create a random distribution for spherical coordinates
-        std::uniform_real_distribution<float> genRadius(0.0f, 1.0f);
+        std::uniform_real_distribution<float> genRadius(0.0f, galaxyUnitSize / 2);
         std::uniform_real_distribution<float> genTheta(0.0f, 2.0f * M_PI);
         std::uniform_real_distribution<float> genCosPhi(-1.0f, 1.0f);
-        std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
 
         for (int i = 0; i < n; i++) {
             float radius = (simulation3D) ? std::cbrt(genRadius(gen)) : std::sqrt(genRadius(gen)); 
@@ -415,7 +416,7 @@ void Simulation::generateUniformDistributionData() {
             float y = (simulation3D) ? radius * sin(phi) * sin(theta) : radius * sin(theta);
             float z = (simulation3D) ? radius * cos(phi) : 0;
             glm::vec3 position = glm::vec3(x, y, z);
-            glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
+            glm::vec3 veloctiy = glm::vec3(0);
             glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
             Body star(position, veloctiy, acceleration, mass/n);
             stars.push_back(star);
