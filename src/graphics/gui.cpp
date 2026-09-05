@@ -77,12 +77,14 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
             parameters.cameraCondition = 0;
             parameters.window3D = true;
         }
+        ImGui::SetItemTooltip("3D Camera: Move camera with WASD keys and pan by holding Left Click. Allows for all initial condition generations.");
         ImGui::SameLine();
         if (ImGui::RadioButton("2D Camera", parameters.cameraCondition == 1)) { 
             parameters.cameraCondition = 1; 
             parameters.window3D = false;
-            parameters.startingCondtion = 0;
+            parameters.simulation3D = false;
         }
+        ImGui::SetItemTooltip("2D Camera: Move camera with WASD keys. Initial conditions restricted to 2D conditions.");
         ImGui::PopFont();
         
 
@@ -90,8 +92,16 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
         ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Select Render Method");
+        ImGui::PopFont();
+        ImGui::PushFont(regularFont);
+        ImGui::SetItemTooltip("Note: Any slider can be typed into with Ctrl + Left Click.");
+        ImGui::PopFont();
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.73f); 
+        ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Select Velocity Color Gradient");
+        ImGui::PopFont();
+        ImGui::PushFont(regularFont);
+        ImGui::SetItemTooltip("Star color is determined by the current velocity clamped between 0 and a max velocity threshold. Color is assigned across a gradient.");
         ImGui::PopFont();
         ImGui::Separator();
 
@@ -99,21 +109,26 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         if (ImGui::RadioButton("Mesh Body", parameters.renderMethod == 0)) { 
             parameters.renderMethod = 0;
         }
+        ImGui::SetItemTooltip("Stars are rendered as single color icosphere meshes.");
         ImGui::SameLine();
         if (ImGui::RadioButton("Point Body", parameters.renderMethod == 1)) { 
             parameters.renderMethod = 1;
         }
+        ImGui::SetItemTooltip("Stars are rendered as glowing points (Recommended).");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.77f);
         ImGui::ColorEdit4("Min Velocity", parameters.minColor, colorPickerFlags);  
+        ImGui::SetItemTooltip("Color at the start of the velocity gradient.");
         ImGui::SameLine();
         ImGui::ColorEdit4("Max Velocity", parameters.maxColor, colorPickerFlags);
+        ImGui::SetItemTooltip("Color at the end of the velocity gradient.");
         
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
-        ImGui::Text("Body Size:");
+        ImGui::Text("Star Size:");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
-        ImGui::SliderFloat("##Body Size", &parameters.bodyRadius, 0.001f, 0.025f);
-        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::SliderFloat("##Star Size", &parameters.bodyRadius, 0.001f, 0.025f);
+        ImGui::SetItemTooltip("Visual size of the stars (Not realistic to real world scale). Determines diameter of icospheres for Mesh bodies." 
+            "\nDetermines diameter of the halo glow for point bodies. Note: Larger sizes reduce simulation performance for point bodies.");
         ImGui::PopItemWidth();
         ImGui::PopFont();
 
@@ -124,15 +139,16 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Configure Simulation Parameters");
         ImGui::PopFont();
+        ImGui::PushFont(regularFont);
+        ImGui::SetItemTooltip("Note: Any slider can be typed into with Ctrl + Left Click.");
         ImGui::Separator();
 
         // N Slider
-        ImGui::PushFont(regularFont);
-        ImGui::Text("Number of Particles:");
+        ImGui::Text("Number of Stars:");
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
-        ImGui::SliderInt("##Number of Particles", &parameters.n, 1, 250000);
-        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::SliderInt("##Number of Stars", &parameters.n, 1, 250000);
+        ImGui::SetItemTooltip("The number of stars has the largest affect on performance out of any setting. Performance limits will primarily depend on the graphics card.");
         ImGui::PopItemWidth();
 
         // Solar Mass Slider
@@ -140,7 +156,7 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
         ImGui::SliderFloat("##Total System Solar Mass", &parameters.billionSolarMass, 1.0f, 500.0f);
-        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::SetItemTooltip("The total mass of the system is measured in solar mass and is evenly split among all the stars in the system.");
         ImGui::PopItemWidth();
 
         // Galaxy Size Slider
@@ -148,7 +164,7 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
         ImGui::SliderFloat("##Galaxy Size", &parameters.genSizeKpc, 1.0f, 100.0f);
-        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::SetItemTooltip("Approximate diameter of the galaxy generation, will vary dependant on the generation option.");
         ImGui::PopItemWidth();
 
         // Timescale Slider
@@ -156,7 +172,7 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
         ImGui::PushItemWidth(-1.0f);
         ImGui::SliderFloat("##Timescale", &parameters.timeScaleMyrPerSec, 1.0f, 200.0f);
-        ImGui::SetItemTooltip("This is a simple text tooltip.");
+        ImGui::SetItemTooltip("Simulation speed in millions of years per second in real time");
         ImGui::PopItemWidth();
         ImGui::PopFont();
 
@@ -165,28 +181,42 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
         ImGui::PushFont(sectionFont);
         ImGui::TextWrapped("Select Computation Method");
-        ImGui::PopFont();
+        ImGui::PopFont(); 
+        ImGui::PushFont(regularFont);
+        ImGui::SetItemTooltip("Barnes-Hut Tree (Improved Performance - Reduced Accuracy): Force computation is performed using a Barnes-Hut Quad/Octree."
+                            "\nBrute Force (Reduced Performance - Improved Accuracy): Force computation is performance using a brute force vector iteration");
         ImGui::Separator();
         
-        ImGui::PushFont(regularFont);
+        // Barnes-Hut Computation
         if (ImGui::RadioButton("Barnes-Hut Tree Computation", parameters.computationMethod == 0)) { 
             parameters.computationMethod = 0;
         }
+        ImGui::SetItemTooltip("Recomended for performance gains for simulations with higher star counts. Higher theta values lead to greater performance"
+                            "\ngains but also decreased accuracy. Most simulations tend to see performance gains over the Brute Force Computation at theta > 0.25,"
+                            "\nhowever this may vary with each simulation condition.");
+
+        // Barnes-Hut Computation Dropdown Box
+        ImGui::BeginDisabled(parameters.computationMethod != 0);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.50f, 0.0f));
+        ImGui::PushItemWidth(25.0f);
         ImGui::SameLine();
+        if (ImGui::BeginCombo("##Barnes-Hut Theta Value SliderCombo", 0)) {
+            ImGui::Text("Barnes-Hut Theta Value: ");
+            ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+            ImGui::PushItemWidth(-1.0f);
+            ImGui::SliderFloat("##Barnes-Hut Theta Value", &parameters.theta, 0.0f, 1.0f);
+            ImGui::PopItemWidth();
+            ImGui::EndCombo();
+        }
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetWindowSize().x * 0.02f);
         if (ImGui::RadioButton("Brute Force Computation", parameters.computationMethod == 1)) { 
             parameters.computationMethod = 1; 
         }
-
-        // Theta Slider
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.015f);
-        ImGui::Text("Barnes-Hut Theta Value:");
-        ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
-        ImGui::PushItemWidth(-1.0f);
-        ImGui::BeginDisabled(parameters.computationMethod == 1);
-        ImGui::SliderFloat("##Barnes-Hut Theta Value", &parameters.theta, 0.0f, 1.0f);
-        ImGui::SetItemTooltip("This is a simple text tooltip.");
-        ImGui::EndDisabled();
-        ImGui::PopItemWidth();
+        ImGui::SetItemTooltip("Recommend for maximum accuracy for simulations with lower star counts. Note: In some rare conditions such as flater ellipitcal"
+                            "\ngalaxies, the Brute Force Computation may deliver improved performance over the Barnes-Hut Tree Computation");
         ImGui::PopFont();
 
 
@@ -195,18 +225,24 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         // Starting Conditions
         ImGui::PushFont(sectionFont);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * sectionSeperation);
-        ImGui::TextWrapped("Select Starting Conditions");
+        ImGui::TextWrapped("Select Initial Conditions");
         ImGui::PopFont();
+        ImGui::PushFont(regularFont);
+        ImGui::SetItemTooltip("Select the simulation dimension and then the initial star generation option. Note: 2D simulations condtions universally have"
+                            "\nimproved performance over 3D simulation condtions.");
         ImGui::Separator();
 
-        ImGui::PushFont(regularFont);
+        ImGui::BeginDisabled(!parameters.window3D);
         if (ImGui::RadioButton("3D Condition", parameters.simulation3D == 1)) { 
             parameters.simulation3D = true;
         }
+        ImGui::SetItemTooltip("3D conditions generate stars across (x, y, z) dimensions.");
+        ImGui::EndDisabled();
         ImGui::SameLine();
         if (ImGui::RadioButton("2D Condition", parameters.simulation3D == 0)) {  
             parameters.simulation3D = false;
         }
+        ImGui::SetItemTooltip("2D conditions generate stars across (x, y) dimensions. Several generation options are only available for 3D conditions.");
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
         ImGui::Separator();
 
@@ -218,6 +254,7 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         if (ImGui::RadioButton("Random Uniform Distribution", parameters.startingCondtion == 0)) { 
             parameters.startingCondtion = 0;
         }
+        ImGui::SetItemTooltip("Star postiions generated in a random uniform distribution within the selected shape. Initial velocities are set to 0.");
 
         // Random Generation Dropdown Box
         ImGui::BeginDisabled(parameters.startingCondtion != 0);
@@ -228,9 +265,11 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
             if (ImGui::RadioButton("Cubical", parameters.secondaryStartingCondition == 0)) { 
                 parameters.secondaryStartingCondition = 0;
             }
+            ImGui::SetItemTooltip("2D Condition: Square     3D Condition: Cube");
             if (ImGui::RadioButton("Spherical", parameters.secondaryStartingCondition == 1)) { 
                 parameters.secondaryStartingCondition = 1;
             }
+            ImGui::SetItemTooltip("2D Condition: Cirlce     3D Condition: Sphere");
             ImGui::EndCombo();
         }
         ImGui::EndDisabled();
@@ -244,6 +283,10 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         if (ImGui::RadioButton("Elipitcal Galaxy", parameters.startingCondtion == 1)) { 
             parameters.startingCondtion = 1; 
         }
+        ImGui::SetItemTooltip("Star postiions generated across a mass density profile following Plummer's method. Initial velocities are determined"
+                            "\nby randomizing from a range capped at the escape velocity and then applying rejection sampling against a isotropic"
+                            "\nvelocity probability distribution. These galaxies are generated with the intention of being in a stable state, you"
+                            "\nshould not observe any galaxy collapses.");
         ImGui::EndDisabled();
 
         // Ellipitical Galaxy Dropdown Box
@@ -255,7 +298,9 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
             ImGui::Text("Elipitical Galaxy Class: ");
             ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
             ImGui::PushItemWidth(-1.0f);
-            ImGui::SliderInt("##EllipitcalSlider", &parameters.secondaryStartingCondition, 0, 8);
+            ImGui::SliderInt("##EllipitcalSlider", &parameters.secondaryStartingCondition, 0, 7);
+            ImGui::SetItemTooltip("Assigns the Hubble ellipitcal galaxy class ranging from E0 to E7. Lower elipitcal galaxies classes are more spherical"
+                                "\nin shape while higher classes are flatter and more oval in shape.");
             ImGui::PopItemWidth();
             ImGui::EndCombo();
         }

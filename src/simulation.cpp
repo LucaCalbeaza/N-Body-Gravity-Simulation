@@ -427,7 +427,7 @@ void Simulation::generateUniformDistributionData() {
 
 void Simulation::generateElipitcalPlummerData(int ellipseClass) {
     // Particle Parameters
-    float scaleRadius = 0.5; 
+    float scaleRadius = galaxyUnitSize / 2; 
     float radialClamp = 0.999f;
     float particleMass = mass/n;
     float gMax = 0.1f;
