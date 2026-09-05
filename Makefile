@@ -20,12 +20,15 @@ SHELL       := C:/msys64/usr/bin/bash.exe
 
 CXX      := g++
 CC       := gcc
-CXXFLAGS := -g -fopenmp -O3 -std=c++17 -Iinclude -MMD -MP
+CXXFLAGS := -g -fopenmp -O3 -std=c++17 -Iinclude -Iinclude/hdf5 -MMD -MP
 CFLAGS   := -g -fopenmp -O3 -Iinclude -MMD -MP
 LDFLAGS  := -fopenmp -Llib
-LDLIBS   := -lglfw3 -lopengl32 -lgdi32 -luser32 -lkernel32
+LDLIBS   := -lglfw3 -lhdf5_cpp -lhdf5 -lopengl32 -lgdi32 -luser32 -lkernel32
 
 TARGET   := main.exe
+
+# --- NEW: where the vendored runtime DLLs live ---
+DLL_DIR  := lib/dll
 
 # --- Source discovery ---
 CPP_SOURCES := $(wildcard src/*.cpp) \
@@ -50,6 +53,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@ $(LDLIBS)
+	@$(SHELL) -c 'cp -u $(DLL_DIR)/*.dll .'
 	@echo "Build complete: $(TARGET)"
 
 # Pattern rule: build/obj/path/to/file.o <- path/to/file.cpp
