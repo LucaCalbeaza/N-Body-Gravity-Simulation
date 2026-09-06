@@ -16,6 +16,11 @@ GUI::GUI(Window &window, inputParameters parameters) {
     // Match the OpenGL context version/profile set up in the constructor
     ImGui_ImplGlfw_InitForOpenGL(window.window, true);
     ImGui_ImplOpenGL3_Init("#version 430");
+
+    // Load Fonts
+    titleFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 48.0f);
+    sectionFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 28.0f);
+    regularFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 20.0f);
 }
 
 
@@ -31,7 +36,8 @@ void GUI::renderFrame() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
+
+GUI::inputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
     parameters.startSimulation = false;
     while (!glfwWindowShouldClose(window.window) && !parameters.startSimulation) {
         glfwPollEvents();
@@ -40,10 +46,6 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
         ImGui::SetNextWindowSize(ImVec2((float)guiWidth, (float)guiHeight), ImGuiCond_Always);
         ImGuiIO& io = ImGui::GetIO();
-
-        ImFont* titleFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 48.0f);
-        ImFont* sectionFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 28.0f);
-        ImFont* regularFont = io.Fonts->AddFontFromFileTTF("fonts/FjallaOne-Regular.ttf", 20.0f);
         float sectionSeperation = 0.03f;
 
         ImGuiWindowFlags windowflags = ImGuiWindowFlags_NoMove
@@ -307,6 +309,30 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
         ImGui::EndDisabled();
 
         
+        // MAGI Galaxy Option
+        ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
+        if (ImGui::RadioButton("MAGI: Many-Component Galaxy Initialiser", parameters.startingCondtion == 2)) { 
+            parameters.startingCondtion = 2; 
+        }
+        ImGui::SetItemTooltip("TBA");
+        ImGui::EndDisabled();
+
+        // MAGI Galaxy Dropdown Box
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.04f);
+        ImGui::BeginDisabled(parameters.startingCondtion != 2);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.65f, 0.0f));
+        ImGui::PushItemWidth(ImGui::GetWindowSize().x * 0.65);
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##MAGICombo", 0)) {
+            ImGui::Text("MAGI Configuration: ");
+            //ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+            ImGui::SliderInt("##MAGI Configuration", &parameters.magiProfileIndex, 0, 6);
+            ImGui::SetItemTooltip("TBA");
+            ImGui::EndCombo();
+        }
+        ImGui::EndDisabled();
+
+        
 
 
         // Start Button
@@ -328,6 +354,41 @@ GUI::inputParameters GUI::run(Window &window, unsigned int guiWidth, unsigned in
     }
 
     return parameters;
+}
+
+void GUI::runGeneration(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
+    if (!glfwWindowShouldClose(window.window)) {
+        glfwPollEvents();
+        cycleFrame();
+
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2((float)guiWidth, (float)guiHeight), ImGuiCond_Always);
+        ImGuiIO& io = ImGui::GetIO();
+
+        ImGuiWindowFlags windowflags = ImGuiWindowFlags_NoMove
+            | ImGuiWindowFlags_NoResize
+            | ImGuiWindowFlags_NoCollapse
+            | ImGuiWindowFlags_NoTitleBar
+            | ImGuiWindowFlags_NoBringToFrontOnFocus;
+        
+
+        ImGui::Begin("N-Body Simulation Setup", nullptr, windowflags);
+
+        // Title Text
+        ImGui::PushFont(titleFont);
+        ImGui::SetCursorPosY(ImGui::GetWindowSize().y * 0.5f);
+        ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("MAGI Galaxy is Generating... (This may take a moment)").x) / 2);
+        ImGui::Text("MAGI Galaxy is Generating... (This may take a moment)");
+        ImGui::PopFont();
+
+
+        ImGui::End();
+
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        renderFrame();
+        glfwSwapBuffers(window.window);
+    }
 }
 
 void GUI::terminate() {

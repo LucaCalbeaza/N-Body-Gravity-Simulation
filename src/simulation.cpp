@@ -8,7 +8,7 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, GUI::inputParameters parameters) :   
+Simulation::Simulation(Window &window, GUI::inputParameters parameters, MagiGeneration magiGen) :   
     window(window),
     meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
     pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),
@@ -69,8 +69,11 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     positions.reserve(n);
     
     // Generate Mesh and Star Data
-    MagiGeneration gen(stars, parameters);
-    //generateStarData();
+    if (startingCondtion == 2) {
+        magiGen.magiLoadHdf5(stars, parameters);
+    } else {
+        generateStarData();
+    }
     generateMesh();
     mesh.loadBodies(stars);
     mesh.initBarnesHutTree(simulation3D);

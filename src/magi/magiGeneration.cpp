@@ -8,31 +8,68 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-MagiGeneration::MagiGeneration(std::vector<Body>& stars, GUI::inputParameters parameters) {
-    stars = magiLoadHdf5(parameters);
+MagiGeneration::MagiGeneration() {}
+
+void MagiGeneration::launchCustomGen(GUI::inputParameters parameters) {
+    // Select MAGI configuration
+    std::string configFile = profileConfigs[parameters.magiProfileIndex];
+    outputFilename = "livegen-" + configFile;
+
+    // Construct WSL Linux Command
+    std::string command =
+        "wsl.exe --cd ~/magi/build -- bash -c \""
+        "bin/magi -config=single/" + configFile +
+        " -file=" + outputFilename +
+        " -Ntot=" + std::to_string(parameters.n) +
+        " -eps=1.5625e-2 -eta=0.5 -ft=1575.0 -snapshotInterval=25.0 -saveInterval=140.0"
+        " && cp dat/" + outputFilename + ".hdf5"
+        " /mnt/c/Users/calbe/Documents/GitHub/N-Body-Orbital-Simulation/magiGenerations/" + outputFilename + ".hdf5\"";
+
+    STARTUPINFOA si{ sizeof(si) };
+    ZeroMemory(&magiProcessInfo, sizeof(magiProcessInfo));
+
+    // Convert command to char buffer
+    std::vector<char> cmdBuffer(command.begin(), command.end());
+    cmdBuffer.push_back('\0');
+
+    // Run WSL Process 
+    CreateProcessA(
+        nullptr, cmdBuffer.data(), nullptr, nullptr, FALSE,
+        CREATE_NO_WINDOW, nullptr, nullptr, &si, &magiProcessInfo
+    );
+    processLaunched = true;
 }
 
-void MagiGeneration::magiCustomGeneration() {
-   //
+bool MagiGeneration::pollComplete() {
+    // Check if magiProcessInfo is complete
+    if (!processLaunched) return false;
+    DWORD exitCode;
+    GetExitCodeProcess(magiProcessInfo.hProcess, &exitCode);
+    if (exitCode != STILL_ACTIVE) {
+        CloseHandle(magiProcessInfo.hProcess);
+        CloseHandle(magiProcessInfo.hThread);
+        return true;
+    }
+    return false; 
 }
 
-std::vector<Body> MagiGeneration::magiLoadHdf5(GUI::inputParameters parameters) {
-    std::vector<Body> stars;
+std::vector<Body> MagiGeneration::magiLoadHdf5(std::vector<Body>& stars, GUI::inputParameters parameters) {
+    // G value in kpc, solarmass, myr unit system
     const float G_REAL = 4.5e-12f; 
+    stars.clear();
 
-    // Compute Unit Constants
+    // Compute Scale Conversion
     float kpcPerUnit = parameters.genSizeKpc * 0.5f;
     float G = G_REAL * (parameters.billionSolarMass * 1e9f) / (kpcPerUnit * kpcPerUnit * kpcPerUnit);
     float galaxyUnitSize = parameters.genSizeKpc / 7.5f;
-
-    // Compute Scales
     float Lscale = galaxyUnitSize / 2.0f;                      
     float Tscale = std::sqrt((Lscale * Lscale * Lscale) / G); 
     float Vscale = Lscale / Tscale; 
 
 
     try {
-        H5::H5File file("magiGenerations/testplummer.hdf5", H5F_ACC_RDONLY);
+        // Load File
+        H5::H5File file("magiGenerations/" + outputFilename + ".hdf5", H5F_ACC_RDONLY);
 
         // Load Datasets
         H5::DataSet positionData  = file.openDataSet("PartType1/Coordinates");
@@ -55,6 +92,7 @@ std::vector<Body> MagiGeneration::magiLoadHdf5(GUI::inputParameters parameters) 
         std::vector<float> massVector(n);
         massData.read(massVector.data(), H5::PredType::NATIVE_FLOAT);
 
+        // Create Stars
         for (size_t i = 0; i < n; i++) {
             glm::vec3 position = glm::vec3(positionVector[3 * i], positionVector[3 * i + 1], positionVector[3 * i + 2]) * Lscale;
             glm::vec3 veloctiy = glm::vec3(velocityVector[3 * i], velocityVector[3 * i + 1], velocityVector[3 * i + 2]) * Vscale;

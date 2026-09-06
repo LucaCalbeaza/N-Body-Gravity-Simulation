@@ -91,7 +91,7 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, GUI::inputParameters parameters);
+    Simulation(Window &window, GUI::inputParameters parameters, MagiGeneration magiGen);
 
 private:
     /**

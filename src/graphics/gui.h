@@ -15,26 +15,44 @@ class GUI {
 public:
     // Simulation Parameters Structure
     struct inputParameters {
+        // Start
         bool startSimulation = false;
+
+        // Window & Camera
         bool simulation3D = true;
         bool window3D = true;
+        int cameraCondition = 0;
+        
+        // Physical Parameters
         int n = 10000;
         float billionSolarMass = 60.0f;
         float genSizeKpc = 15.0f;
         float timeScaleMyrPerSec = 20.0f;
-        float theta = 0.5;
+        
+        // Computation Method 
         int computationMethod = 0;
+        float theta = 0.5;
+        
+        // Visuals & Render
         int renderMethod = 1;
-        int startingCondtion = 0;
-        int secondaryStartingCondition = 0; 
-        int cameraCondition = 0;
         float minColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};  
         float maxColor[4] = {1.0f, 1.0f, 1.0f, 1.0f}; 
         float bodyRadius = 0.005f; 
+
+        // Initial Condition
+        int startingCondtion = 0;
+        int secondaryStartingCondition = 0; 
+        int magiProfileIndex = 0;
     };
 
     // ------ GUI -------------
     inputParameters parameters;
+    bool loadingMAGI = false;
+    
+    // Fonts
+    ImFont* titleFont;
+    ImFont* sectionFont;
+    ImFont* regularFont;
 
     /**
      * imGUI Constructor: Creates a new imGUI window context 
@@ -53,10 +71,16 @@ public:
     void renderFrame();
 
     /**
-     * Run the GUI and return the simulation parameters 
+     * Run the GUI main menu and return the simulation parameters 
      * when the user clicks the start button. 
      */
-    inputParameters run(Window &window, unsigned int guiWidth, unsigned int guiHeight);
+    inputParameters runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight);
+
+    /**
+     * Run the MAGI generation loading screen
+     */
+    void runGeneration(Window &window, unsigned int guiWidth, unsigned int guiHeight);
+
 
     /**
      * Terminate the imGUI context 
