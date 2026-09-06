@@ -69,10 +69,12 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     positions.reserve(n);
     
     // Generate Mesh and Star Data
-    generateStarData();
+    MagiGeneration gen(stars, parameters);
+    //generateStarData();
     generateMesh();
     mesh.loadBodies(stars);
     mesh.initBarnesHutTree(simulation3D);
+
 
     // Run Simulation
     run();

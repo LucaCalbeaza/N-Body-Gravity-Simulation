@@ -22,6 +22,7 @@
 #include "graphics/mesh.h"
 #include "physics/body.h"
 #include "physics/barnesHutTree.h"
+#include "magi/magiGeneration.h"
 
 class Simulation {
 public:

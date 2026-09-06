@@ -34,6 +34,7 @@ DLL_DIR  := lib/dll
 CPP_SOURCES := $(wildcard src/*.cpp) \
                $(wildcard src/graphics/*.cpp) \
                $(wildcard src/physics/*.cpp) \
+			   $(wildcard src/magi/*.cpp) \
                $(wildcard include/imGUI/*.cpp)
 
 C_SOURCES   := src/glad.c
