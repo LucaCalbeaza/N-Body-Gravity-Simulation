@@ -5,7 +5,48 @@
 
 #include "gui.h"
 
-GUI::GUI(Window &window, inputParameters parameters) {
+
+// magiConfig Functions: 
+
+GUI::MagiConfig::MagiConfig(std::string name) {
+    this->name = name;
+}
+
+void GUI::MagiConfig::resetConfig() {
+    magiProfileIndex = 0;
+    componentStarCount = 1; 
+    componentMass = 1.0f; 
+    scaleRadius = 1.0f; 
+    scaleHeight = 1.0f; 
+    extraParam = 1.0f;
+}
+
+
+// InputParameters Functions:
+
+GUI::InputParameters::InputParameters() {
+    GUI::MagiConfig bulgeConfig("Bulge");
+    this->magiParameters.push_back(bulgeConfig);
+
+    GUI::MagiConfig blackHoleConfig("Central Black Hole");
+    this->magiParameters.push_back(blackHoleConfig);
+
+    GUI::MagiConfig thickDiskConfig("Thick Disk");
+    this->magiParameters.push_back(thickDiskConfig);
+
+    GUI::MagiConfig thinDiskConfig("Thin Disk");
+    this->magiParameters.push_back(thinDiskConfig);
+
+    GUI::MagiConfig darkMatterConfig("Dark Matter Halo");
+    this->magiParameters.push_back(darkMatterConfig);
+
+    GUI::MagiConfig stellarConfig("Stellar Halo");
+    this->magiParameters.push_back(stellarConfig);
+}
+
+// GUI Functions:
+
+GUI::GUI(Window &window, InputParameters parameters) {
     // Create Context
     this->parameters = parameters;
     IMGUI_CHECKVERSION();
@@ -37,7 +78,7 @@ void GUI::renderFrame() {
 }
 
 
-GUI::inputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
+GUI::InputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
     parameters.startSimulation = false;
     while (!glfwWindowShouldClose(window.window) && !parameters.startSimulation) {
         glfwPollEvents();
@@ -307,11 +348,12 @@ GUI::inputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigne
             ImGui::EndCombo();
         }
         ImGui::EndDisabled();
+        ImGui::Separator();
 
         
         // MAGI Galaxy Option
         ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
-        if (ImGui::RadioButton("MAGI: Many-Component Galaxy Initialiser", parameters.startingCondtion == 2)) { 
+        if (ImGui::RadioButton("MAGI: Many-Component Galaxy Initialiser:", parameters.startingCondtion == 2)) { 
             parameters.startingCondtion = 2; 
         }
         ImGui::SetItemTooltip("TBA");
@@ -320,17 +362,53 @@ GUI::inputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigne
         // MAGI Galaxy Dropdown Box
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.04f);
         ImGui::BeginDisabled(parameters.startingCondtion != 2);
-        ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.65f, 0.0f));
-        ImGui::PushItemWidth(ImGui::GetWindowSize().x * 0.65);
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.68f, 0.0f));
+        ImGui::PushItemWidth(ImGui::GetWindowSize().x * 0.68f);
         ImGui::SameLine();
-        if (ImGui::BeginCombo("##MAGICombo", 0)) {
-            ImGui::Text("MAGI Configuration: ");
-            //ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
-            ImGui::SliderInt("##MAGI Configuration", &parameters.magiProfileIndex, 0, 6);
+        if (ImGui::BeginCombo("##MAGICombo", "Generate New MAGI Galaxy")) { 
+            // File Name Input Text
+            float labelWidth = ImGui::GetWindowWidth() * 0.25f;
+            static char hdf5FileNameBuffer[32] = "";
+            std::strcpy(hdf5FileNameBuffer, parameters.hdf5FileName.c_str());
+            ImGui::Text("Save File Name: ");
+            ImGui::SameLine(labelWidth);
+            ImGui::PushItemWidth(-1.0f);
+            if (ImGui::InputText("##", hdf5FileNameBuffer, IM_ARRAYSIZE(hdf5FileNameBuffer), ImGuiInputTextFlags_CharsNoBlank)) {
+                parameters.hdf5FileName = hdf5FileNameBuffer;
+            }
+            
+            // Component List
+            for (int i = 0; i < parameters.magiParameters.size(); i++) {
+                MagiConfig& config = parameters.magiParameters[i];
+                ImGui::PushID(i);
+                ImGui::Text("%s:", config.name.c_str());
+                ImGui::SameLine(labelWidth); 
+                ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.77f, 0.0f));
+                ImGui::PushItemWidth(-1.0f);
+                if (ImGui::BeginCombo("##Component", "Component Parameters")) {
+                    magiComponentParametersWindow(config);
+                    ImGui::EndCombo();
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+            }
+
+            // Add Component Button
+            ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::GetWindowSize().x * 0.5f) / 2);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.25f);
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.4f, 1.0f));
+            if (ImGui::Button("Add component", ImVec2(ImGui::GetWindowSize().x * 0.5f, 30))) {
+                std::string newName = "Component " + std::to_string(parameters.magiParameters.size() + 1) + ":";
+                parameters.magiParameters.push_back(newName);
+            }
+            ImGui::PopStyleColor();
             ImGui::SetItemTooltip("TBA");
             ImGui::EndCombo();
         }
         ImGui::EndDisabled();
+        
+
+        
 
         
 
@@ -342,6 +420,17 @@ GUI::inputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigne
         if (ImGui::Button("Start Simulation", ImVec2(ImGui::GetWindowSize().x * 0.5f, 60))) {
             parameters.startSimulation = true;
         }
+
+        // Set N & Mass with MAGI Components
+        if (parameters.startingCondtion == 2) {
+            parameters.n = 0;
+            parameters.billionSolarMass = 0.0f;
+            for (int i = 0; i < parameters.magiParameters.size(); i++) {
+                parameters.n += parameters.magiParameters[i].componentStarCount;
+                parameters.billionSolarMass += parameters.magiParameters[i].componentMass;
+            }
+        }
+
         ImGui::PopStyleColor();
         ImGui::PopFont();
 
@@ -354,6 +443,100 @@ GUI::inputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigne
     }
 
     return parameters;
+}
+
+void GUI::magiComponentParametersWindow(MagiConfig& config) {
+    // Category Dropdown Box
+    const char* categories[] = {"Spheroidal (Bulges & Halos)", "Disk", "Central Black Hole"};
+    ImGui::Text("Category:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::SetNextItemWidth(-1.0f);
+    if (ImGui::BeginCombo("##Category Drop Down", categories[config.category])) {
+        for (int i = 0; i < std::size(categories); i++) {
+            const bool is_selected = (config.category == i);
+            if (ImGui::Selectable(categories[i], is_selected)) {
+                config.category = i;
+                config.resetConfig();
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    // Profile Dropdown box
+    std::vector<const char*> profiles;
+    if (config.category == 0) {
+        profiles = {"Plummer Sphere", "King Sphere", "Burkert Sphere", "Hernquist Sphere", "NFW Sphere", "Moore Sphere", "Einasto Sphere"};
+    } else if (config.category == 1) {
+        profiles = {"Exponential Disk", "Sersic Disk"};
+    } else if (config.category == 2) {
+        profiles = {"Point Mass"};
+    }
+
+    ImGui::BeginDisabled(config.category == 2);
+    ImGui::Text("Profile Type:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::SetNextItemWidth(-1.0f);
+    if (ImGui::BeginCombo("##Profile Drop Down", profiles[config.magiProfileIndex])) {
+        for (int i = 0; i < std::size(profiles); i++) {
+            const bool is_selected = (config.magiProfileIndex == i);
+            if (ImGui::Selectable(profiles[i], is_selected)) {
+                config.magiProfileIndex = i;
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::EndDisabled();
+
+    // Component Star Count Slider
+    ImGui::BeginDisabled(config.category == 2);
+    ImGui::Text("Component Star Count:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::SliderInt("##Component Star Count", &config.componentStarCount, 1, 100000);
+    ImGui::PopItemWidth();
+    ImGui::EndDisabled();
+
+    // Component Total Mass
+    ImGui::Text("Component Total Mass:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::SliderFloat("##Component Total Mass", &config.componentMass, 1.0f, 500.0f);
+    ImGui::PopItemWidth();
+
+    // Scale Radius
+    ImGui::BeginDisabled(config.category == 2);
+    ImGui::Text("Scale Radius:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::SliderFloat("##Scale Radius", &config.scaleRadius, 1.0f, 50.0f);
+    ImGui::PopItemWidth();
+    ImGui::EndDisabled();
+
+    // Scale Height
+    ImGui::BeginDisabled(config.category != 1);
+    ImGui::Text("Scale Height:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::SliderFloat("##Scale Height", &config.scaleHeight, 1.0f, 50.0f);
+    ImGui::PopItemWidth();
+    ImGui::EndDisabled();
+
+    // Extra Param
+    ImGui::BeginDisabled(!(config.magiProfileIndex == 1 || config.magiProfileIndex == 6));
+    ImGui::Text("Extra Param:");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    ImGui::SliderFloat("##Extra Param", &config.extraParam, 1.0f, 10.0f);
+    ImGui::PopItemWidth();
+    ImGui::EndDisabled();
 }
 
 void GUI::runGeneration(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
@@ -390,6 +573,8 @@ void GUI::runGeneration(Window &window, unsigned int guiWidth, unsigned int guiH
         glfwSwapBuffers(window.window);
     }
 }
+
+
 
 void GUI::terminate() {
     ImGui_ImplOpenGL3_Shutdown();

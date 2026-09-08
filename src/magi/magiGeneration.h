@@ -17,7 +17,7 @@ class MagiGeneration {
 public:
     PROCESS_INFORMATION magiProcessInfo{};
     bool processLaunched = false;
-    std::string outputFilename = "testplummer"; 
+    std::string outputFileName = "DefaultHDF5Name"; 
     
     // Config Options
     const std::vector<std::string> profileConfigs = {
@@ -37,7 +37,7 @@ public:
      * Resulting HDF5 file is placed in the magiGenerations
      * folder found in the root directory
      */
-    void launchCustomGen(GUI::inputParameters parameters);
+    void launchCustomGen(GUI::InputParameters& parameters);
 
     /**
      * Returns true if the MAGI generation process is complete,
@@ -50,7 +50,7 @@ public:
      * from the HDF5 file of the current outputFilename in the 
      * magiGenerations folder. 
      */
-    std::vector<Body> magiLoadHdf5(std::vector<Body>& stars, GUI::inputParameters parameters);
+    std::vector<Body> magiLoadHdf5(std::vector<Body>& stars, GUI::InputParameters parameters);
 
 };
 

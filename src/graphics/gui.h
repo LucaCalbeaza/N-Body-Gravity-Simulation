@@ -10,11 +10,38 @@
 #include "../include/imGUI/imgui.h"
 #include "../include/imGUI/imgui_impl_glfw.h"
 #include "../include/imGUI/imgui_impl_opengl3.h"
+#include <vector>
+#include <cstring>
+#include <random>
 
 class GUI {
 public:
     // Simulation Parameters Structure
-    struct inputParameters {
+    struct MagiConfig {
+        std::string name = "Default Name:"; 
+        std::string paramFileName; 
+        int category = 0;
+        int magiProfileIndex = 0;
+        int componentStarCount = 1; 
+        float componentMass = 1.0f; 
+        float scaleRadius = 1.0f; 
+        float scaleHeight = 1.0f; 
+        float extraParam = 1.0f;
+
+        /**
+         * magiConfig constructor 
+         */
+        MagiConfig(std::string name);
+
+        /**
+         * Reset Config to default parameters apart from 
+         * the category and names. Intended to be called 
+         * after category is changed.
+         */
+        void resetConfig();
+    };
+
+    struct InputParameters {
         // Start
         bool startSimulation = false;
 
@@ -41,12 +68,19 @@ public:
 
         // Initial Condition
         int startingCondtion = 0;
-        int secondaryStartingCondition = 0; 
-        int magiProfileIndex = 0;
+        int secondaryStartingCondition = 0;  
+        std::vector<MagiConfig> magiParameters;
+        std::string hdf5FileName = "Generation";
+    
+        /**
+         * Input Parameters constructor: Loads the magiParmeters 
+         * vectors with the 7 default components.  
+         */
+        InputParameters();
     };
 
     // ------ GUI -------------
-    inputParameters parameters;
+    InputParameters parameters;
     bool loadingMAGI = false;
     
     // Fonts
@@ -58,7 +92,7 @@ public:
      * imGUI Constructor: Creates a new imGUI window context 
      * onto the given window. 
      */
-    GUI(Window &window, inputParameters parameters);
+    GUI(Window &window, InputParameters parameters);
 
     /**
      * Cycle a new Dear ImGui frame. 
@@ -74,7 +108,12 @@ public:
      * Run the GUI main menu and return the simulation parameters 
      * when the user clicks the start button. 
      */
-    inputParameters runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight);
+    InputParameters runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight);
+
+    /**
+     * 
+     */
+    void magiComponentParametersWindow(MagiConfig& config);
 
     /**
      * Run the MAGI generation loading screen

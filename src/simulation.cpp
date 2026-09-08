@@ -8,7 +8,7 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, GUI::inputParameters parameters, MagiGeneration magiGen) :   
+Simulation::Simulation(Window &window, GUI::InputParameters parameters, MagiGeneration magiGen) :   
     window(window),
     meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
     pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),

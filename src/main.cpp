@@ -17,7 +17,7 @@ MagiGeneration magiGen{};
 // Main Class
 int main() {
     Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
-    GUI::inputParameters parameters;
+    GUI::InputParameters parameters{};
 
     while (!glfwWindowShouldClose(window.window)) {
         if (state == AppState::Menu) {
