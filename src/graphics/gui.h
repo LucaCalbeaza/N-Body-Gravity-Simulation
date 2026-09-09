@@ -18,9 +18,10 @@ class GUI {
 public:
     // Simulation Parameters Structure
     struct MagiConfig {
+        bool enabled = true;
         std::string name = "Default Name:"; 
         std::string paramFileName; 
-        int category = 0;
+        int category = 1.0;
         int magiProfileIndex = 0;
         int componentStarCount = 1; 
         float componentMass = 1.0f; 
@@ -31,7 +32,7 @@ public:
         /**
          * magiConfig constructor 
          */
-        MagiConfig(std::string name);
+        MagiConfig(std::string name, int category);
 
         /**
          * Reset Config to default parameters apart from 
@@ -82,11 +83,17 @@ public:
     // ------ GUI -------------
     InputParameters parameters;
     bool loadingMAGI = false;
+    float sectionSeperation = 0.03f;
     
     // Fonts
     ImFont* titleFont;
     ImFont* sectionFont;
     ImFont* regularFont;
+
+    // Flags
+    ImGuiWindowFlags colorPickerFlags = ImGuiColorEditFlags_NoSidePreview
+        | ImGuiColorEditFlags_NoInputs
+        | ImGuiColorEditFlags_NoAlpha;
 
     /**
      * imGUI Constructor: Creates a new imGUI window context 
@@ -113,12 +120,53 @@ public:
     /**
      * 
      */
+    void cameraCondition();
+
+    /**
+     * 
+     */
+    void renderAndColorCondition();
+
+    /**
+     * 
+     */
+    void coreSimulationParameters();
+
+    /**
+     * 
+     */
+    void computationMethod();
+
+    /**
+     * 
+     */
+    void standardInitialConditions();
+
+    /**
+     * 
+     */
+    void magiConditions();
+
+    /**
+     * 
+     */
     void magiComponentParametersWindow(MagiConfig& config);
+
+    /**
+     * 
+     */
+    void updateRestrictions();
+
+    /**
+     * 
+     */
+    void startButton();
 
     /**
      * Run the MAGI generation loading screen
      */
     void runGeneration(Window &window, unsigned int guiWidth, unsigned int guiHeight);
+
 
 
     /**
