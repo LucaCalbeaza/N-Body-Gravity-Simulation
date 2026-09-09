@@ -181,34 +181,33 @@ build/obj/src/simulation.o: src/simulation.cpp src/simulation.h \
  src/graphics/camera.h src/graphics/gui.h src/graphics/window.h \
  include/../include/imGUI/imgui.h include/../include/imGUI/imconfig.h \
  include/../include/imGUI/imgui_impl_glfw.h \
- include/../include/imGUI/imgui_impl_opengl3.h src/graphics/mesh.h \
- src/graphics/shader.h src/graphics/../physics/body.h src/physics/body.h \
- src/physics/barnesHutTree.h src/physics/body.h src/magi/magiGeneration.h \
- src/magi/../physics/body.h src/magi/../graphics/gui.h \
- include/hdf5/H5Cpp.h include/hdf5/H5Include.h include/hdf5/hdf5.h \
- include/hdf5/H5public.h include/hdf5/H5pubconf.h \
- include/hdf5/H5version.h include/hdf5/H5api_adpt.h \
- include/hdf5/H5Apublic.h include/hdf5/H5Ipublic.h \
- include/hdf5/H5Opublic.h include/hdf5/H5Tpublic.h \
- include/hdf5/H5ACpublic.h include/hdf5/H5Cpublic.h \
- include/hdf5/H5Dpublic.h include/hdf5/H5Epublic.h \
- include/hdf5/H5Epubgen.h include/hdf5/H5ESpublic.h \
- include/hdf5/H5Fpublic.h include/hdf5/H5FDpublic.h \
- include/hdf5/H5Gpublic.h include/hdf5/H5Lpublic.h \
- include/hdf5/H5Mpublic.h include/hdf5/H5VLpublic.h \
- include/hdf5/H5VLconnector.h include/hdf5/H5Rpublic.h \
- include/hdf5/H5MMpublic.h include/hdf5/H5Ppublic.h \
- include/hdf5/H5Spublic.h include/hdf5/H5Zpublic.h \
- include/hdf5/H5PLpublic.h include/hdf5/H5ESdevelop.h \
- include/hdf5/H5FDdevelop.h include/hdf5/H5Idevelop.h \
- include/hdf5/H5Ldevelop.h include/hdf5/H5Tdevelop.h \
- include/hdf5/H5TSdevelop.h include/hdf5/H5Zdevelop.h \
- include/hdf5/H5VLconnector_passthru.h include/hdf5/H5VLnative.h \
- include/hdf5/H5FDcore.h include/hdf5/H5FDdirect.h \
- include/hdf5/H5FDfamily.h include/hdf5/H5FDhdfs.h include/hdf5/H5FDlog.h \
- include/hdf5/H5FDmirror.h include/hdf5/H5FDmpi.h include/hdf5/H5FDmpio.h \
- include/hdf5/H5FDmulti.h include/hdf5/H5FDonion.h \
- include/hdf5/H5FDros3.h include/hdf5/H5FDsec2.h \
+ include/../include/imGUI/imgui_impl_opengl3.h \
+ src/graphics/../physics/starGeneration.h \
+ src/graphics/../physics/../physics/body.h \
+ src/graphics/../physics/parameters.h include/hdf5/H5Cpp.h \
+ include/hdf5/H5Include.h include/hdf5/hdf5.h include/hdf5/H5public.h \
+ include/hdf5/H5pubconf.h include/hdf5/H5version.h \
+ include/hdf5/H5api_adpt.h include/hdf5/H5Apublic.h \
+ include/hdf5/H5Ipublic.h include/hdf5/H5Opublic.h \
+ include/hdf5/H5Tpublic.h include/hdf5/H5ACpublic.h \
+ include/hdf5/H5Cpublic.h include/hdf5/H5Dpublic.h \
+ include/hdf5/H5Epublic.h include/hdf5/H5Epubgen.h \
+ include/hdf5/H5ESpublic.h include/hdf5/H5Fpublic.h \
+ include/hdf5/H5FDpublic.h include/hdf5/H5Gpublic.h \
+ include/hdf5/H5Lpublic.h include/hdf5/H5Mpublic.h \
+ include/hdf5/H5VLpublic.h include/hdf5/H5VLconnector.h \
+ include/hdf5/H5Rpublic.h include/hdf5/H5MMpublic.h \
+ include/hdf5/H5Ppublic.h include/hdf5/H5Spublic.h \
+ include/hdf5/H5Zpublic.h include/hdf5/H5PLpublic.h \
+ include/hdf5/H5ESdevelop.h include/hdf5/H5FDdevelop.h \
+ include/hdf5/H5Idevelop.h include/hdf5/H5Ldevelop.h \
+ include/hdf5/H5Tdevelop.h include/hdf5/H5TSdevelop.h \
+ include/hdf5/H5Zdevelop.h include/hdf5/H5VLconnector_passthru.h \
+ include/hdf5/H5VLnative.h include/hdf5/H5FDcore.h \
+ include/hdf5/H5FDdirect.h include/hdf5/H5FDfamily.h \
+ include/hdf5/H5FDhdfs.h include/hdf5/H5FDlog.h include/hdf5/H5FDmirror.h \
+ include/hdf5/H5FDmpi.h include/hdf5/H5FDmpio.h include/hdf5/H5FDmulti.h \
+ include/hdf5/H5FDonion.h include/hdf5/H5FDros3.h include/hdf5/H5FDsec2.h \
  include/hdf5/H5FDsplitter.h include/hdf5/H5FDstdio.h \
  include/hdf5/H5FDwindows.h include/hdf5/H5FDsubfiling.h \
  include/hdf5/H5FDioc.h include/hdf5/H5VLpassthru.h \
@@ -227,7 +226,9 @@ build/obj/src/simulation.o: src/simulation.cpp src/simulation.h \
  include/hdf5/H5CompType.h include/hdf5/H5ArrayType.h \
  include/hdf5/H5VarLenType.h include/hdf5/H5DataSet.h \
  include/hdf5/H5CommonFG.h include/hdf5/H5Group.h include/hdf5/H5File.h \
- include/hdf5/H5Library.h
+ include/hdf5/H5Library.h src/graphics/../physics/parameters.h \
+ src/graphics/../physics/body.h src/graphics/mesh.h src/graphics/shader.h \
+ src/physics/body.h src/physics/barnesHutTree.h src/physics/body.h
 src/simulation.h:
 include/glm/glm.hpp:
 include/glm/detail/_fixes.hpp:
@@ -434,15 +435,9 @@ include/../include/imGUI/imgui.h:
 include/../include/imGUI/imconfig.h:
 include/../include/imGUI/imgui_impl_glfw.h:
 include/../include/imGUI/imgui_impl_opengl3.h:
-src/graphics/mesh.h:
-src/graphics/shader.h:
-src/graphics/../physics/body.h:
-src/physics/body.h:
-src/physics/barnesHutTree.h:
-src/physics/body.h:
-src/magi/magiGeneration.h:
-src/magi/../physics/body.h:
-src/magi/../graphics/gui.h:
+src/graphics/../physics/starGeneration.h:
+src/graphics/../physics/../physics/body.h:
+src/graphics/../physics/parameters.h:
 include/hdf5/H5Cpp.h:
 include/hdf5/H5Include.h:
 include/hdf5/hdf5.h:
@@ -532,3 +527,10 @@ include/hdf5/H5CommonFG.h:
 include/hdf5/H5Group.h:
 include/hdf5/H5File.h:
 include/hdf5/H5Library.h:
+src/graphics/../physics/parameters.h:
+src/graphics/../physics/body.h:
+src/graphics/mesh.h:
+src/graphics/shader.h:
+src/physics/body.h:
+src/physics/barnesHutTree.h:
+src/physics/body.h:

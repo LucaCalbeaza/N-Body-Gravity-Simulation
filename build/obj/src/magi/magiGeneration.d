@@ -129,47 +129,30 @@ build/obj/src/magi/magiGeneration.o: src/magi/magiGeneration.cpp \
  include/glm/packing.hpp include/glm/detail/func_packing.inl \
  include/glm/detail/type_half.hpp include/glm/detail/type_half.inl \
  include/glm/integer.hpp include/glm/detail/func_integer.inl \
- src/magi/../graphics/gui.h src/magi/../graphics/window.h \
- include/glad/glad.h include/KHR/khrplatform.h include/GLFW/glfw3.h \
- src/magi/../graphics/camera.h include/glm/gtc/matrix_transform.hpp \
- include/glm/gtc/../ext/matrix_projection.hpp \
- include/glm/gtc/../ext/../gtc/constants.hpp \
- include/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp \
- include/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp \
- include/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl \
- include/glm/gtc/../ext/../gtc/constants.inl \
- include/glm/gtc/../ext/matrix_projection.inl \
- include/glm/gtc/../ext/matrix_clip_space.hpp \
- include/glm/gtc/../ext/matrix_clip_space.inl \
- include/glm/gtc/../ext/matrix_transform.hpp \
- include/glm/gtc/../ext/matrix_transform.inl \
- include/glm/gtc/matrix_transform.inl include/../include/imGUI/imgui.h \
- include/../include/imGUI/imconfig.h \
- include/../include/imGUI/imgui_impl_glfw.h \
- include/../include/imGUI/imgui_impl_opengl3.h include/hdf5/H5Cpp.h \
- include/hdf5/H5Include.h include/hdf5/hdf5.h include/hdf5/H5public.h \
- include/hdf5/H5pubconf.h include/hdf5/H5version.h \
- include/hdf5/H5api_adpt.h include/hdf5/H5Apublic.h \
- include/hdf5/H5Ipublic.h include/hdf5/H5Opublic.h \
- include/hdf5/H5Tpublic.h include/hdf5/H5ACpublic.h \
- include/hdf5/H5Cpublic.h include/hdf5/H5Dpublic.h \
- include/hdf5/H5Epublic.h include/hdf5/H5Epubgen.h \
- include/hdf5/H5ESpublic.h include/hdf5/H5Fpublic.h \
- include/hdf5/H5FDpublic.h include/hdf5/H5Gpublic.h \
- include/hdf5/H5Lpublic.h include/hdf5/H5Mpublic.h \
- include/hdf5/H5VLpublic.h include/hdf5/H5VLconnector.h \
- include/hdf5/H5Rpublic.h include/hdf5/H5MMpublic.h \
- include/hdf5/H5Ppublic.h include/hdf5/H5Spublic.h \
- include/hdf5/H5Zpublic.h include/hdf5/H5PLpublic.h \
- include/hdf5/H5ESdevelop.h include/hdf5/H5FDdevelop.h \
- include/hdf5/H5Idevelop.h include/hdf5/H5Ldevelop.h \
- include/hdf5/H5Tdevelop.h include/hdf5/H5TSdevelop.h \
- include/hdf5/H5Zdevelop.h include/hdf5/H5VLconnector_passthru.h \
- include/hdf5/H5VLnative.h include/hdf5/H5FDcore.h \
- include/hdf5/H5FDdirect.h include/hdf5/H5FDfamily.h \
- include/hdf5/H5FDhdfs.h include/hdf5/H5FDlog.h include/hdf5/H5FDmirror.h \
- include/hdf5/H5FDmpi.h include/hdf5/H5FDmpio.h include/hdf5/H5FDmulti.h \
- include/hdf5/H5FDonion.h include/hdf5/H5FDros3.h include/hdf5/H5FDsec2.h \
+ src/magi/parameters.h include/hdf5/H5Cpp.h include/hdf5/H5Include.h \
+ include/hdf5/hdf5.h include/hdf5/H5public.h include/hdf5/H5pubconf.h \
+ include/hdf5/H5version.h include/hdf5/H5api_adpt.h \
+ include/hdf5/H5Apublic.h include/hdf5/H5Ipublic.h \
+ include/hdf5/H5Opublic.h include/hdf5/H5Tpublic.h \
+ include/hdf5/H5ACpublic.h include/hdf5/H5Cpublic.h \
+ include/hdf5/H5Dpublic.h include/hdf5/H5Epublic.h \
+ include/hdf5/H5Epubgen.h include/hdf5/H5ESpublic.h \
+ include/hdf5/H5Fpublic.h include/hdf5/H5FDpublic.h \
+ include/hdf5/H5Gpublic.h include/hdf5/H5Lpublic.h \
+ include/hdf5/H5Mpublic.h include/hdf5/H5VLpublic.h \
+ include/hdf5/H5VLconnector.h include/hdf5/H5Rpublic.h \
+ include/hdf5/H5MMpublic.h include/hdf5/H5Ppublic.h \
+ include/hdf5/H5Spublic.h include/hdf5/H5Zpublic.h \
+ include/hdf5/H5PLpublic.h include/hdf5/H5ESdevelop.h \
+ include/hdf5/H5FDdevelop.h include/hdf5/H5Idevelop.h \
+ include/hdf5/H5Ldevelop.h include/hdf5/H5Tdevelop.h \
+ include/hdf5/H5TSdevelop.h include/hdf5/H5Zdevelop.h \
+ include/hdf5/H5VLconnector_passthru.h include/hdf5/H5VLnative.h \
+ include/hdf5/H5FDcore.h include/hdf5/H5FDdirect.h \
+ include/hdf5/H5FDfamily.h include/hdf5/H5FDhdfs.h include/hdf5/H5FDlog.h \
+ include/hdf5/H5FDmirror.h include/hdf5/H5FDmpi.h include/hdf5/H5FDmpio.h \
+ include/hdf5/H5FDmulti.h include/hdf5/H5FDonion.h \
+ include/hdf5/H5FDros3.h include/hdf5/H5FDsec2.h \
  include/hdf5/H5FDsplitter.h include/hdf5/H5FDstdio.h \
  include/hdf5/H5FDwindows.h include/hdf5/H5FDsubfiling.h \
  include/hdf5/H5FDioc.h include/hdf5/H5VLpassthru.h \
@@ -188,7 +171,19 @@ build/obj/src/magi/magiGeneration.o: src/magi/magiGeneration.cpp \
  include/hdf5/H5CompType.h include/hdf5/H5ArrayType.h \
  include/hdf5/H5VarLenType.h include/hdf5/H5DataSet.h \
  include/hdf5/H5CommonFG.h include/hdf5/H5Group.h include/hdf5/H5File.h \
- include/hdf5/H5Library.h include/glm/gtc/type_ptr.hpp \
+ include/hdf5/H5Library.h include/glm/gtc/matrix_transform.hpp \
+ include/glm/gtc/../ext/matrix_projection.hpp \
+ include/glm/gtc/../ext/../gtc/constants.hpp \
+ include/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp \
+ include/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp \
+ include/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl \
+ include/glm/gtc/../ext/../gtc/constants.inl \
+ include/glm/gtc/../ext/matrix_projection.inl \
+ include/glm/gtc/../ext/matrix_clip_space.hpp \
+ include/glm/gtc/../ext/matrix_clip_space.inl \
+ include/glm/gtc/../ext/matrix_transform.hpp \
+ include/glm/gtc/../ext/matrix_transform.inl \
+ include/glm/gtc/matrix_transform.inl include/glm/gtc/type_ptr.hpp \
  include/glm/gtc/../gtc/quaternion.hpp \
  include/glm/gtc/../gtc/../ext/vector_relational.hpp \
  include/glm/gtc/../gtc/../ext/vector_relational.inl \
@@ -368,29 +363,7 @@ include/glm/detail/type_half.hpp:
 include/glm/detail/type_half.inl:
 include/glm/integer.hpp:
 include/glm/detail/func_integer.inl:
-src/magi/../graphics/gui.h:
-src/magi/../graphics/window.h:
-include/glad/glad.h:
-include/KHR/khrplatform.h:
-include/GLFW/glfw3.h:
-src/magi/../graphics/camera.h:
-include/glm/gtc/matrix_transform.hpp:
-include/glm/gtc/../ext/matrix_projection.hpp:
-include/glm/gtc/../ext/../gtc/constants.hpp:
-include/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp:
-include/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp:
-include/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl:
-include/glm/gtc/../ext/../gtc/constants.inl:
-include/glm/gtc/../ext/matrix_projection.inl:
-include/glm/gtc/../ext/matrix_clip_space.hpp:
-include/glm/gtc/../ext/matrix_clip_space.inl:
-include/glm/gtc/../ext/matrix_transform.hpp:
-include/glm/gtc/../ext/matrix_transform.inl:
-include/glm/gtc/matrix_transform.inl:
-include/../include/imGUI/imgui.h:
-include/../include/imGUI/imconfig.h:
-include/../include/imGUI/imgui_impl_glfw.h:
-include/../include/imGUI/imgui_impl_opengl3.h:
+src/magi/parameters.h:
 include/hdf5/H5Cpp.h:
 include/hdf5/H5Include.h:
 include/hdf5/hdf5.h:
@@ -480,6 +453,19 @@ include/hdf5/H5CommonFG.h:
 include/hdf5/H5Group.h:
 include/hdf5/H5File.h:
 include/hdf5/H5Library.h:
+include/glm/gtc/matrix_transform.hpp:
+include/glm/gtc/../ext/matrix_projection.hpp:
+include/glm/gtc/../ext/../gtc/constants.hpp:
+include/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp:
+include/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp:
+include/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl:
+include/glm/gtc/../ext/../gtc/constants.inl:
+include/glm/gtc/../ext/matrix_projection.inl:
+include/glm/gtc/../ext/matrix_clip_space.hpp:
+include/glm/gtc/../ext/matrix_clip_space.inl:
+include/glm/gtc/../ext/matrix_transform.hpp:
+include/glm/gtc/../ext/matrix_transform.inl:
+include/glm/gtc/matrix_transform.inl:
 include/glm/gtc/type_ptr.hpp:
 include/glm/gtc/../gtc/quaternion.hpp:
 include/glm/gtc/../gtc/../ext/vector_relational.hpp:

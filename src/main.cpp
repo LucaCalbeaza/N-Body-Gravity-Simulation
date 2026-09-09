@@ -2,7 +2,8 @@
 #include "simulation.h"
 #include "graphics/window.h"
 #include "graphics/gui.h"
-#include "magi/magiGeneration.h"
+#include "physics/starGeneration.h"
+#include "physics/parameters.h"
 
 // Window Parameters
 const int guiWidth = 1000;
@@ -12,36 +13,36 @@ const int simulationHeight = 1000;
 
 enum class AppState { Menu, GeneratingMagi, Simulating };
 AppState state = AppState::Menu;
-MagiGeneration magiGen{};
+StarGeneration starGen{};
 
 // Main Class
 int main() {
     Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
-    GUI::InputParameters parameters{};
+    Parameters parameters{};
 
     while (!glfwWindowShouldClose(window.window)) {
         if (state == AppState::Menu) {
             glfwSetWindowSize(window.window, guiWidth, guiHeight);
-            GUI gui(window, parameters);
+            GUI gui(window, parameters, starGen);
             parameters = gui.runMenu(window, guiWidth, guiHeight);
             gui.terminate();
             if (parameters.startSimulation) {
                 if (parameters.startingCondtion == 2) {
-                    magiGen.launchCustomGen(parameters);
+                    starGen.launchCustomGen(parameters);
                     state = AppState::GeneratingMagi;
                 } else {
                     state = AppState::Simulating;
                 }
             }
         } else if (state == AppState::GeneratingMagi) {
-            GUI gui(window, parameters);
+            GUI gui(window, parameters, starGen);
             gui.runGeneration(window, guiWidth, guiHeight);
             gui.terminate();
-            if (magiGen.pollComplete()) {
+            if (starGen.pollComplete()) {
                 state = AppState::Simulating;
             }
         } else if (state == AppState::Simulating) {
-            Simulation simulation(window, parameters, magiGen);
+            Simulation simulation(window, parameters);
             window.returnToMenu = false;
             state = AppState::Menu;
         }

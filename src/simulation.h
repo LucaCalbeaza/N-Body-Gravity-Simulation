@@ -22,7 +22,6 @@
 #include "graphics/mesh.h"
 #include "physics/body.h"
 #include "physics/barnesHutTree.h"
-#include "magi/magiGeneration.h"
 
 class Simulation {
 public:
@@ -91,19 +90,13 @@ public:
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, GUI::InputParameters parameters, MagiGeneration magiGen);
+    Simulation(Window &window, Parameters parameters);
 
 private:
     /**
      * Creates the mesh(es) for the simulation.
      */
     Mesh generateMesh();
-
-    /**
-     * Generates star data based on given initial condition
-     */
-    void generateStarData();
-
 
     /**
      * Runs the simulation updating and drawing the stars on 
@@ -140,18 +133,6 @@ private:
      * are made using the given theta threshold.
      */
     void updatePhysicsBarnesHutTreeComputeShader(float theta);
-
-    /**
-     * Adds n random stars to with randomized initial positions and 
-     * initial velocity to the simulation.
-     */
-    void generateUniformDistributionData();
-
-    /**
-     * Adds N stars to the simulation generated in 
-     * accordance to a Plummer density sphere 
-     */
-    void generateElipitcalPlummerData(int ellipseClass);
 
     /**
      * Return the center of mass of the stars in the system 

@@ -1,23 +1,171 @@
 /** 
- * File: magiGeneration.cpp
- * Description: Implementations for the magiGeneration class.
+ * File: starGeneration.cpp
+ * Description: Implementations for the StarGeneration class.
 */
 
-#include "magiGeneration.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "starGeneration.h"
 
-MagiGeneration::MagiGeneration() {}
+StarGeneration::StarGeneration() {}
 
-void MagiGeneration::launchCustomGen(GUI::InputParameters& parameters) {
+void StarGeneration::generateStarData(Parameters& parameters) {
+    parameters.stars.clear();
+    if (parameters.startingCondtion == 0) {
+        generateUniformDistributionData(parameters);
+    } else if (parameters.startingCondtion == 1) {
+        generateElipitcalPlummerData(parameters);
+    } else if (parameters.startingCondtion == 2) {
+        //magiLoadHdf5(parameters);
+    }
+}
+
+void StarGeneration::generateUniformDistributionData(Parameters& parameters) {
+    // Set scale parameters
+    float galaxyUnitSize = parameters.genSizeKpc / 7.5;
+    float normalizedMass = 1.0f;
+
+    // Create RNG device set
+    std::random_device randomDevice;
+    std::mt19937 gen(randomDevice());
+    if (parameters.secondaryStartingCondition == 0) {
+        // Create a random distribution between [-1.0f, 1.0f]
+        std::uniform_real_distribution<float> genSize(-galaxyUnitSize / 2, galaxyUnitSize / 2);
+
+        // Generate n stars with random initial {x,y} positions between
+        // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
+        for (int i = 0; i < parameters.n; i++) {
+            glm::vec3 position = glm::vec3(genSize(gen),  genSize(gen), (parameters.simulation3D) ? genSize(gen) : 0);
+            glm::vec3 veloctiy = glm::vec3(0);
+            glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
+            Body star(position, veloctiy, acceleration, normalizedMass/parameters.n);
+            parameters.stars.push_back(star);
+        }
+    } else {
+        // Create a random distribution for spherical coordinates
+        std::uniform_real_distribution<float> genRadius(0.0f, galaxyUnitSize / 2);
+        std::uniform_real_distribution<float> genTheta(0.0f, 2.0f * M_PI);
+        std::uniform_real_distribution<float> genCosPhi(-1.0f, 1.0f);
+
+        for (int i = 0; i < parameters.n; i++) {
+            float radius = (parameters.simulation3D) ? std::cbrt(genRadius(gen)) : std::sqrt(genRadius(gen)); 
+            float theta = genTheta(gen);
+            float phi = (parameters.simulation3D) ? acos(genCosPhi(gen)) : 0.0f;
+            float x = (parameters.simulation3D) ? radius * sin(phi) * cos(theta) : radius * cos(theta);
+            float y = (parameters.simulation3D) ? radius * sin(phi) * sin(theta) : radius * sin(theta);
+            float z = (parameters.simulation3D) ? radius * cos(phi) : 0;
+            glm::vec3 position = glm::vec3(x, y, z);
+            glm::vec3 veloctiy = glm::vec3(0);
+            glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
+            Body star(position, veloctiy, acceleration, normalizedMass/parameters.n);
+            parameters.stars.push_back(star);
+        }
+    }
+}
+
+void StarGeneration::generateElipitcalPlummerData(Parameters& parameters) {
+    // Particle Parameters
+    float galaxyUnitSize = parameters.genSizeKpc / 7.5;
+    float normalizedMass = 1.0f;
+    float scaleRadius = galaxyUnitSize / 2; 
+    float radialClamp = 0.999f;
+    float particleMass = normalizedMass/parameters.n;
+    float gMax = 0.1f;
+    float G_REAL = 4.5e-12f;
+    float kpcPerUnit = parameters.genSizeKpc * 0.5f;
+    float G = G_REAL * (parameters.billionSolarMass * 1e9f) / (kpcPerUnit * kpcPerUnit * kpcPerUnit);
+
+    // Create RNG device set between [0.0f, 1.0f)
+    std::random_device randomDevice;
+    std::mt19937 gen(randomDevice());
+    std::uniform_real_distribution<float> genRandom(0.0f, 1.0f);
+
+    for (int i = 0; i < parameters.n; i++) {
+        // Sample radius 
+        float x1 = genRandom(gen) * radialClamp;
+        float r = scaleRadius * pow(pow(x1, -2.0f / 3.0f) - 1.0f, -0.5f);
+
+        // Sample position direction
+        float x2 = genRandom(gen); 
+        float x3 = genRandom(gen);
+        float cosTheta = 1.0f - 2.0f * x2; 
+        float sinTheta = sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta)); 
+        float phi = 2.0f * M_PI * x3;
+        glm::vec3 positionDirection = glm::vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+        glm::vec3 position = positionDirection * r;
+
+        // Find escape velocity 
+        float denominator = sqrt(r * r + scaleRadius * scaleRadius);
+        float escapeVelocity = sqrt(2.0f * G * normalizedMass / denominator);
+
+        // Sample speed Fraction 
+        float q;
+        while (true) {
+            q = genRandom(gen);
+            float g = q * q * pow(1.0f - q * q, 3.5f);
+
+            float y = genRandom(gen) * gMax;
+            if (y < g) {
+                break;
+            }
+        }
+        float speed = q * escapeVelocity;
+
+        // Sample velocity direction 
+        x2 = genRandom(gen); 
+        x3 = genRandom(gen);
+        cosTheta = 1.0f - 2.0f * x2; 
+        sinTheta = sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta)); 
+        phi = 2.0f * M_PI * x3;
+        glm::vec3 velocityDirection = glm::vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+        glm::vec3 velocity = velocityDirection * speed;
+
+        // Add Star
+        glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
+        Body star(position, velocity, acceleration, particleMass);
+        parameters.stars.push_back(star);
+    }
+
+    // Flatten Ellipse according to class
+    int ellipseClass = parameters.secondaryStartingCondition;
+    ellipseClass = std::clamp(ellipseClass, 0, 8);
+    float axisRatio = 1.0f - (float)ellipseClass / 10.0f;
+    glm::vec3 stretch = glm::vec3(1.0f, 1.0f, axisRatio);
+
+    for (auto& star : parameters.stars) {
+        glm::vec3 stretchedPosition = star.position * stretch;
+        glm::vec3 stretchedVelocity = star.velocity * stretch;
+        
+        star.position = stretchedPosition;
+        star.velocity = stretchedVelocity;
+    }
+
+
+    // Recenter
+    glm::vec3 comPosition = glm::vec3(0.0f);
+    glm::vec3 comVelocity = glm::vec3(0.0f);
+    float massSum = 0.0f;
+
+    for (auto& star : parameters.stars) {
+        comPosition += star.position * star.mass;
+        comVelocity += star.velocity * star.mass;
+        massSum += star.mass;
+    }
+    comPosition /= massSum;
+    comVelocity /= massSum;
+
+    for (auto& star : parameters.stars) {
+        star.position -= comPosition;
+        star.velocity -= comVelocity;
+    }
+}
+
+void StarGeneration::launchCustomGen(Parameters& parameters) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> distrib(1, 100000);
     int randomNameID = distrib(gen);
 
     // Filename and Output directory
-    outputFileName = parameters.hdf5FileName + std::to_string(randomNameID);
+    outputFileName = parameters.generationHDF5FileName + std::to_string(randomNameID);
     std::string hdf5OutputDir =
         "/mnt/c/Users/calbe/Documents/GitHub/N-Body-Orbital-Simulation/magiGenerations/newGenerations";
 
@@ -32,7 +180,7 @@ void MagiGeneration::launchCustomGen(GUI::InputParameters& parameters) {
 
     // Create Param Files in the MAGI directory for each component
     for (int i = 0; i < numberOfComponents; i++) {
-        GUI::MagiConfig& config = parameters.magiParameters[i]; 
+        Parameters::MagiConfig& config = parameters.magiParameters[i]; 
         if (config.enabled) {
             std::string paramFileName = outputFileName + "-C" + std::to_string(i);
             config.paramFileName = paramFileName;
@@ -88,7 +236,7 @@ void MagiGeneration::launchCustomGen(GUI::InputParameters& parameters) {
     }
     commandScript += std::to_string(activeComponents) + "\n";
     for (int i = 0; i < numberOfComponents; i++) {
-        GUI::MagiConfig config = parameters.magiParameters[i]; 
+        Parameters::MagiConfig config = parameters.magiParameters[i]; 
         if (config.enabled) {
             int profileIndex = 0;
             if (config.category == 0) {
@@ -128,7 +276,7 @@ void MagiGeneration::launchCustomGen(GUI::InputParameters& parameters) {
     processLaunched = true;
 }
 
-bool MagiGeneration::pollComplete() {
+bool StarGeneration::pollComplete() {
     // Check if magiProcessInfo is complete
     if (!processLaunched) return false;
     DWORD exitCode;
@@ -141,10 +289,9 @@ bool MagiGeneration::pollComplete() {
     return false; 
 }
 
-std::vector<Body> MagiGeneration::magiLoadHdf5(std::vector<Body>& stars, GUI::InputParameters parameters) {
+void StarGeneration::magiLoadHdf5(Parameters& parameters) {
     // G value in kpc, solarmass, myr unit system
     const float G_REAL = 4.5e-12f; 
-    stars.clear();
 
     // Compute Total CutoffRadius
     float maxCutoffRadius = 0.0f;
@@ -164,7 +311,7 @@ std::vector<Body> MagiGeneration::magiLoadHdf5(std::vector<Body>& stars, GUI::In
 
     try {
         // Load File
-        H5::H5File file("magiGenerations/newGenerations/" + outputFileName + ".hdf5", H5F_ACC_RDONLY);
+        H5::H5File file("magiGenerations/newGenerations/" + parameters.selectedHDF5FileName + ".hdf5", H5F_ACC_RDONLY);
 
         // Divide into component sub groups
         H5::Group root = file.openGroup("/");
@@ -204,13 +351,10 @@ std::vector<Body> MagiGeneration::magiLoadHdf5(std::vector<Body>& stars, GUI::In
                 glm::vec3 veloctiy = glm::vec3(velocityVector[3 * i], velocityVector[3 * i + 1], velocityVector[3 * i + 2]) * Vscale;
                 glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
                 Body star(position, veloctiy, acceleration, massVector[i]);
-                stars.push_back(star);
+                parameters.stars.push_back(star);
             }
         }
     } catch (H5::Exception& e) {
         std::cout << "HDF5 error: " << e.getCDetailMsg() << std::endl;
-        return stars;
     }
-
-    return stars;
 }

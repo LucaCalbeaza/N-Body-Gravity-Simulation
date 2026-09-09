@@ -8,7 +8,7 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, GUI::InputParameters parameters, MagiGeneration magiGen) :   
+Simulation::Simulation(Window &window, Parameters parameters) :   
     window(window),
     meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
     pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),
@@ -45,6 +45,7 @@ Simulation::Simulation(Window &window, GUI::InputParameters parameters, MagiGene
     computationMethod(parameters.computationMethod),
     startingCondtion(parameters.startingCondtion),
     secondaryStartingCondtion(parameters.secondaryStartingCondition),
+    stars(parameters.stars),
     n(parameters.n),
     timeScale(parameters.timeScaleMyrPerSec),           
     theta(parameters.theta),
@@ -67,13 +68,7 @@ Simulation::Simulation(Window &window, GUI::InputParameters parameters, MagiGene
     innerBodies.reserve(n);
     outerBodies.reserve(n);
     positions.reserve(n);
-    
-    // Generate Mesh and Star Data
-    if (startingCondtion == 2) {
-        magiGen.magiLoadHdf5(stars, parameters);
-    } else {
-        generateStarData();
-    }
+
     generateMesh();
     mesh.loadBodies(stars);
     mesh.initBarnesHutTree(simulation3D);
@@ -81,14 +76,6 @@ Simulation::Simulation(Window &window, GUI::InputParameters parameters, MagiGene
 
     // Run Simulation
     run();
-}
-
-void Simulation::generateStarData() {
-    if (startingCondtion == 0) {
-        generateUniformDistributionData();
-    } else if (startingCondtion == 1) {
-        generateElipitcalPlummerData(secondaryStartingCondtion);
-    }
 }
 
 Mesh Simulation::generateMesh() {
@@ -388,137 +375,6 @@ void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
     glUniform1f(glGetUniformLocation(accelerationComputationShader.ID, "dt"), dt);
     glDispatchCompute(numGroups, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-}
-
-void Simulation::generateUniformDistributionData() {
-    // Create RNG device set
-    std::random_device randomDevice;
-    std::mt19937 gen(randomDevice());
-    if (secondaryStartingCondtion == 0) {
-        // Create a random distribution between [-1.0f, 1.0f]
-        std::uniform_real_distribution<float> genSize(-galaxyUnitSize / 2, galaxyUnitSize / 2);
-
-        // Generate n stars with random initial {x,y} positions between
-        // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
-        for (int i = 0; i < n; i++) {
-            glm::vec3 position = glm::vec3(genSize(gen),  genSize(gen), (simulation3D) ? genSize(gen) : 0);
-            glm::vec3 veloctiy = glm::vec3(0);
-            glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-            Body star(position, veloctiy, acceleration, mass/n);
-            stars.push_back(star);
-        }
-    } else {
-        // Create a random distribution for spherical coordinates
-        std::uniform_real_distribution<float> genRadius(0.0f, galaxyUnitSize / 2);
-        std::uniform_real_distribution<float> genTheta(0.0f, 2.0f * M_PI);
-        std::uniform_real_distribution<float> genCosPhi(-1.0f, 1.0f);
-
-        for (int i = 0; i < n; i++) {
-            float radius = (simulation3D) ? std::cbrt(genRadius(gen)) : std::sqrt(genRadius(gen)); 
-            float theta = genTheta(gen);
-            float phi = (simulation3D) ? acos(genCosPhi(gen)) : 0.0f;
-            float x = (simulation3D) ? radius * sin(phi) * cos(theta) : radius * cos(theta);
-            float y = (simulation3D) ? radius * sin(phi) * sin(theta) : radius * sin(theta);
-            float z = (simulation3D) ? radius * cos(phi) : 0;
-            glm::vec3 position = glm::vec3(x, y, z);
-            glm::vec3 veloctiy = glm::vec3(0);
-            glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-            Body star(position, veloctiy, acceleration, mass/n);
-            stars.push_back(star);
-        }
-
-    }
-}
-
-void Simulation::generateElipitcalPlummerData(int ellipseClass) {
-    // Particle Parameters
-    float scaleRadius = galaxyUnitSize / 2; 
-    float radialClamp = 0.999f;
-    float particleMass = mass/n;
-    float gMax = 0.1f;
-
-    // Create RNG device set between [0.0f, 1.0f)
-    std::random_device randomDevice;
-    std::mt19937 gen(randomDevice());
-    std::uniform_real_distribution<float> genRandom(0.0f, 1.0f);
-
-    for (int i = 0; i < n; i++) {
-        // Sample radius 
-        float x1 = genRandom(gen) * radialClamp;
-        float r = scaleRadius * pow(pow(x1, -2.0f / 3.0f) - 1.0f, -0.5f);
-
-        // Sample position direction
-        float x2 = genRandom(gen); 
-        float x3 = genRandom(gen);
-        float cosTheta = 1.0f - 2.0f * x2; 
-        float sinTheta = sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta)); 
-        float phi = 2.0f * M_PI * x3;
-        glm::vec3 positionDirection = glm::vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
-        glm::vec3 position = positionDirection * r;
-
-        // Find escape velocity 
-        float denominator = sqrt(r * r + scaleRadius * scaleRadius);
-        float escapeVelocity = sqrt(2.0f * G * mass / denominator);
-
-        // Sample speed Fraction 
-        float q;
-        while (true) {
-            q = genRandom(gen);
-            float g = q * q * pow(1.0f - q * q, 3.5f);
-
-            float y = genRandom(gen) * gMax;
-            if (y < g) {
-                break;
-            }
-        }
-        float speed = q * escapeVelocity;
-
-        // Sample velocity direction 
-        x2 = genRandom(gen); 
-        x3 = genRandom(gen);
-        cosTheta = 1.0f - 2.0f * x2; 
-        sinTheta = sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta)); 
-        phi = 2.0f * M_PI * x3;
-        glm::vec3 velocityDirection = glm::vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
-        glm::vec3 velocity = velocityDirection * speed;
-
-        // Add Star
-        glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-        Body star(position, velocity, acceleration, particleMass);
-        stars.push_back(star);
-    }
-
-    // Flatten Ellipse according to class
-    ellipseClass = std::clamp(ellipseClass, 0, 8);
-    float axisRatio = 1.0f - (float)ellipseClass / 10.0f;
-    glm::vec3 stretch = glm::vec3(1.0f, 1.0f, axisRatio);
-
-    for (auto& star : stars) {
-        glm::vec3 stretchedPosition = star.position * stretch;
-        glm::vec3 stretchedVelocity = star.velocity * stretch;
-        
-        star.position = stretchedPosition;
-        star.velocity = stretchedVelocity;
-    }
-
-
-    // Recenter
-    glm::vec3 comPosition = glm::vec3(0.0f);
-    glm::vec3 comVelocity = glm::vec3(0.0f);
-    float massSum = 0.0f;
-
-    for (auto& star : stars) {
-        comPosition += star.position * star.mass;
-        comVelocity += star.velocity * star.mass;
-        massSum += star.mass;
-    }
-    comPosition /= massSum;
-    comVelocity /= massSum;
-
-    for (auto& star : stars) {
-        star.position -= comPosition;
-        star.velocity -= comVelocity;
-    }
 }
 
 glm::vec3 Simulation::computeCenterOfMass() {

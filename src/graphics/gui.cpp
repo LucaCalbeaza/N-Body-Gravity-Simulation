@@ -5,51 +5,12 @@
 
 #include "gui.h"
 
-
-// magiConfig Functions: 
-
-GUI::MagiConfig::MagiConfig(std::string name, int category) {
-    this->name = name;
-    this->category = category;
-}
-
-void GUI::MagiConfig::resetConfig() {
-    magiProfileIndex = 0;
-    componentStarCount = 1; 
-    componentMass = 1.0f; 
-    scaleRadius = 1.0f; 
-    scaleHeight = 1.0f; 
-    extraParam = 1.0f;
-}
-
-
-// InputParameters Functions:
-
-GUI::InputParameters::InputParameters() {
-    GUI::MagiConfig darkMatterConfig("Dark Matter Halo", 0);
-    this->magiParameters.push_back(darkMatterConfig);
-
-    GUI::MagiConfig stellarConfig("Stellar Halo", 0);
-    this->magiParameters.push_back(stellarConfig);
-
-    GUI::MagiConfig bulgeConfig("Bulge", 0);
-    this->magiParameters.push_back(bulgeConfig);
-
-    // GUI::MagiConfig blackHoleConfig("Central Black Hole", 2);
-    // this->magiParameters.push_back(blackHoleConfig);
-
-    GUI::MagiConfig thickDiskConfig("Thick Disk", 1);
-    this->magiParameters.push_back(thickDiskConfig);
-
-    GUI::MagiConfig thinDiskConfig("Thin Disk", 1);
-    this->magiParameters.push_back(thinDiskConfig);
-}
-
 // GUI Functions:
 
-GUI::GUI(Window &window, InputParameters parameters) {
+GUI::GUI(Window &window, Parameters parameters, StarGeneration starGen) {
     // Create Context
     this->parameters = parameters;
+    this->starGen = starGen;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -79,7 +40,7 @@ void GUI::renderFrame() {
 }
 
 
-GUI::InputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
+Parameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
     parameters.startSimulation = false;
     while (!glfwWindowShouldClose(window.window) && !parameters.startSimulation) {
         glfwPollEvents();
@@ -126,6 +87,7 @@ GUI::InputParameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigne
         // Start Button
         startButton();
 
+        starGen.generateStarData(parameters);
         updateRestrictions();
         ImGui::PopFont();
         ImGui::End();
@@ -406,7 +368,7 @@ void GUI::magiConditions() {
         
         // Component List
         for (int i = 0; i < parameters.magiParameters.size(); i++) {
-            MagiConfig& config = parameters.magiParameters[i];
+            Parameters::MagiConfig& config = parameters.magiParameters[i];
             ImGui::PushID(i);
             ImGui::Checkbox("", &config.enabled);
             ImGui::SameLine();
@@ -448,7 +410,7 @@ void GUI::magiConditions() {
     // ImGui::EndDisabled();
 }
 
-void GUI::magiComponentParametersWindow(MagiConfig& config) {
+void GUI::magiComponentParametersWindow(Parameters::MagiConfig& config) {
     // Profile Dropdown box
     std::vector<const char*> profiles;
     if (config.category == 0) {
