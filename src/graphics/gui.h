@@ -16,7 +16,8 @@
 
 class GUI {
 public:
-    // Simulation Parameters Structure
+    
+    // MAGI component parameters
     struct MagiConfig {
         bool enabled = true;
         std::string name = "Default Name:"; 
@@ -30,7 +31,8 @@ public:
         float extraParam = 1.0f;
 
         /**
-         * magiConfig constructor 
+         * magiConfig constructor: sets the given category
+         * and name 
          */
         MagiConfig(std::string name, int category);
 
@@ -42,6 +44,7 @@ public:
         void resetConfig();
     };
 
+    // Simulation Parameters Structure
     struct InputParameters {
         // Start
         bool startSimulation = false;
@@ -107,7 +110,7 @@ public:
     void cycleFrame();
 
     /**
-     * Renders the new frame draw data 
+     * Renders the new frame draw data. 
      */
     void renderFrame();
 
@@ -118,59 +121,67 @@ public:
     InputParameters runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight);
 
     /**
-     * 
+     * Draw the Camera condition (3D vs 2D) section of the GUI.
      */
     void cameraCondition();
 
     /**
-     * 
+     * Draw the star render condition (Mesh Body vs Point Body) and the 
+     * star render color conditions (velocity gradient) section of the GUI.
      */
     void renderAndColorCondition();
 
     /**
-     * 
+     * Draw the core simulation parameters (N, total mass, galaxy scale, 
+     * timescale) section of the GUI.
      */
     void coreSimulationParameters();
 
+    
     /**
-     * 
+     * Draw the computation method (Brute-Force vs Barnes-Hut tree) section
+     * of the GUI. 
      */
     void computationMethod();
 
-    /**
-     * 
+   /**
+     * Draw the initial conditions type (3D vs 2D) and the standard conditions 
+     * section of the GUI. The standard conditions are the non-MAGI conditions 
+     * such as the random normal distribution generation. 
      */
     void standardInitialConditions();
 
     /**
-     * 
+     * Draw the MAGI conditions section of the GUI. 
      */
     void magiConditions();
 
     /**
-     * 
+     * Draw the MAGI component dropdown for the given config of the GUI. 
      */
     void magiComponentParametersWindow(MagiConfig& config);
 
     /**
-     * 
+     * Updated the restrictions to ensure no invalid conditions exist 
+     * (ex. a MAGI disk without a bulge) and to ensure N and mass line up 
+     * with the sum of the components. 
      */
     void updateRestrictions();
 
     /**
-     * 
+     * Draw the start button for the GUI.
      */
     void startButton();
 
     /**
-     * Run the MAGI generation loading screen
+     * Run the MAGI generation loading screen.
      */
     void runGeneration(Window &window, unsigned int guiWidth, unsigned int guiHeight);
 
 
 
     /**
-     * Terminate the imGUI context 
+     * Terminate the imGUI context. 
      */
     void terminate();
 

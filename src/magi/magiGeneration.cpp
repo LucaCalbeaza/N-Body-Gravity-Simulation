@@ -20,7 +20,6 @@ void MagiGeneration::launchCustomGen(GUI::InputParameters& parameters) {
     outputFileName = parameters.hdf5FileName + std::to_string(randomNameID);
     std::string hdf5OutputDir =
         "/mnt/c/Users/calbe/Documents/GitHub/N-Body-Orbital-Simulation/magiGenerations/newGenerations";
-    std::string magiDirectory = "cfg/generated/" + outputFileName;
 
     // Default Parameter Options
     const float DISK_RADIAL_DISPERSION = -1.0f; 
@@ -28,75 +27,80 @@ void MagiGeneration::launchCustomGen(GUI::InputParameters& parameters) {
     const float DISK_RETROGRADE_FRAC   = 0.0f;
 
     std::string commandScript = "mkdir -p cfg/generated && mkdir -p " + hdf5OutputDir + " && ";
-    //std::string commandScript = "mkdir -p " + magiDirectory + " && mkdir -p " + hdf5OutputDir + " && ";
 
     int numberOfComponents = parameters.magiParameters.size();
 
     // Create Param Files in the MAGI directory for each component
     for (int i = 0; i < numberOfComponents; i++) {
         GUI::MagiConfig& config = parameters.magiParameters[i]; 
-        std::string paramFileName = outputFileName + "-C" + std::to_string(i);
-        config.paramFileName = paramFileName;
-        commandScript += "cat > cfg/generated/" + paramFileName + ".param << 'EOF'\n";
-        //commandScript += "cat > " + magiDirectory + "/" + paramFileName + ".param << 'EOF'\n";
+        if (config.enabled) {
+            std::string paramFileName = outputFileName + "-C" + std::to_string(i);
+            config.paramFileName = paramFileName;
+            commandScript += "cat > cfg/generated/" + paramFileName + ".param << 'EOF'\n";
 
 
-        if (config.category == 0) {
-            // Spherodial Case (Bulges & Halos)
-            float cutoffRadius = config.scaleRadius * 15.0f;
-            float cutoffWidth  = cutoffRadius * 0.08f;
-            commandScript += std::to_string(config.componentMass / parameters.billionSolarMass) + "\n";
-            commandScript += std::to_string(config.scaleRadius) + "\n";
-            // King or Einasto spheres require an extra parameter
-            if (config.magiProfileIndex == 1 || config.magiProfileIndex == 6) {
-                commandScript += std::to_string(config.extraParam) + "\n";
+            if (config.category == 0) {
+                // Spherodial Case (Bulges & Halos)
+                float cutoffRadius = config.scaleRadius * 15.0f;
+                float cutoffWidth  = cutoffRadius * 0.08f;
+                commandScript += std::to_string(config.componentMass / parameters.billionSolarMass) + "\n";
+                commandScript += std::to_string(config.scaleRadius) + "\n";
+                // King or Einasto spheres require an extra parameter
+                if (config.magiProfileIndex == 1 || config.magiProfileIndex == 6) {
+                    commandScript += std::to_string(config.extraParam) + "\n";
+                }
+                commandScript += "1\n";
+                commandScript += std::to_string(cutoffRadius) + " " + std::to_string(cutoffWidth) + "\n";
+
+            } else if (config.category == 1) {
+                // Disk Case
+                float cutoffRadius = config.scaleRadius * 15.0f;
+                float cutoffWidth  = cutoffRadius * 0.08f;
+                commandScript += std::to_string(config.componentMass / parameters.billionSolarMass) + "\n";
+                commandScript += std::to_string(config.scaleRadius) + "\n";
+                commandScript += std::to_string(config.scaleHeight) + "\n";
+                // Sersic disks require an extra parameter
+                if (config.magiProfileIndex == -2) { 
+                    commandScript += std::to_string(config.extraParam) + "\n";
+                }
+                commandScript += std::to_string(DISK_RADIAL_DISPERSION) + " " + std::to_string(DISK_TOOMRE_Q) + "\n";
+                commandScript += std::to_string(DISK_RETROGRADE_FRAC) + "\n";
+                commandScript += "1\n"; 
+                commandScript += std::to_string(cutoffRadius) + " " + std::to_string(cutoffWidth) + "\n";
+
+            } else if (config.category == 2) {
+                // Central Massive Blackhole case
+                commandScript += std::to_string(config.componentMass / parameters.billionSolarMass) + "\n";
             }
-            commandScript += "1\n";
-            commandScript += std::to_string(cutoffRadius) + " " + std::to_string(cutoffWidth) + "\n";
 
-        } else if (config.category == 1) {
-            // Disk Case
-            float cutoffRadius = config.scaleRadius * 15.0f;
-            float cutoffWidth  = cutoffRadius * 0.08f;
-            commandScript += std::to_string(config.componentMass / parameters.billionSolarMass) + "\n";
-            commandScript += std::to_string(config.scaleRadius) + "\n";
-            commandScript += std::to_string(config.scaleHeight) + "\n";
-            // Sersic disks require an extra parameter
-            if (config.magiProfileIndex == -2) { 
-                commandScript += std::to_string(config.extraParam) + "\n";
-            }
-            commandScript += std::to_string(DISK_RADIAL_DISPERSION) + " " + std::to_string(DISK_TOOMRE_Q) + "\n";
-            commandScript += std::to_string(DISK_RETROGRADE_FRAC) + "\n";
-            commandScript += "1\n"; 
-            commandScript += std::to_string(cutoffRadius) + " " + std::to_string(cutoffWidth) + "\n";
-
-        } else if (config.category == 2) {
-            // Central Massive Blackhole case
-            commandScript += std::to_string(config.componentMass / parameters.billionSolarMass) + "\n";
+            commandScript += "EOF\n";
         }
-
-        commandScript += "EOF\n";
     }
 
     // Create Config File in the MAGI directory
     commandScript += "cat > cfg/generated/" + outputFileName + ".cfg << 'EOF'\n";
-    //commandScript += "cat > " + magiDirectory + "/" + outputFileName + ".cfg << 'EOF'\n";
     commandScript += "-1\n";
-    commandScript += std::to_string(numberOfComponents) + "\n";
+    int activeComponents = 0;
+    for (int i = 0; i < numberOfComponents; i++) {
+        if (parameters.magiParameters[i].enabled) {
+            activeComponents++;
+        }
+    }
+    commandScript += std::to_string(activeComponents) + "\n";
     for (int i = 0; i < numberOfComponents; i++) {
         GUI::MagiConfig config = parameters.magiParameters[i]; 
-        int profileIndex = 0;
-        if (config.category == 0) {
-            profileIndex = config.magiProfileIndex;
-        } else if (config.category == 1) {
-            profileIndex = (config.magiProfileIndex == 0) ? -1 : -2;
-        } else if (config.category == 2) {
-            profileIndex = 1000;
+        if (config.enabled) {
+            int profileIndex = 0;
+            if (config.category == 0) {
+                profileIndex = config.magiProfileIndex;
+            } else if (config.category == 1) {
+                profileIndex = (config.magiProfileIndex == 0) ? -1 : -2;
+            } else if (config.category == 2) {
+                profileIndex = 1000;
+            }
+            commandScript += std::to_string(profileIndex) + " generated/" + config.paramFileName + ".param 1 " +
+                    std::to_string(config.componentStarCount) + "\n";
         }
-        commandScript += std::to_string(profileIndex) + " generated/" + config.paramFileName + ".param 1 " +
-                   std::to_string(config.componentStarCount) + "\n";
-        // commandScript += std::to_string(profileIndex) + " " + magiDirectory + "/" + config.paramFileName + ".param 1 " +
-        //            std::to_string(config.componentStarCount) + "\n";
     }
     commandScript += "EOF\n"; 
 
@@ -145,7 +149,7 @@ std::vector<Body> MagiGeneration::magiLoadHdf5(std::vector<Body>& stars, GUI::In
     // Compute Total CutoffRadius
     float maxCutoffRadius = 0.0f;
     for (int i = 0; i < parameters.magiParameters.size(); i++) {
-        if (parameters.magiParameters[i].category != 2) {
+        if (parameters.magiParameters[i].category != 2 && parameters.magiParameters[i].enabled) {
             maxCutoffRadius = std::max(maxCutoffRadius, parameters.magiParameters[i].scaleRadius * 15.0f);
         }
     }
