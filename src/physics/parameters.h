@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 #include "../physics/body.h"  
 
 
@@ -47,6 +48,7 @@ public:
 
     // Start
     bool startSimulation = false;
+    bool startGeneration = false;
 
     // Window & Camera
     bool simulation3D = true;
@@ -70,12 +72,15 @@ public:
     float bodyRadius = 0.005f; 
 
     // Initial Condition
+    std::vector<Body> stars;
     int startingCondtion = 0;
     int secondaryStartingCondition = 0;  
     std::vector<MagiConfig> magiParameters;
     std::string generationHDF5FileName = "Generation";
-    std::string selectedHDF5FileName = "Generation";
-    std::vector<Body> stars;
+
+    std::vector<std::string> hdf5FileNameStrings;
+    std::vector<const char*> HDF5FileNames;
+    int selectedHDF5FileIndex = 0;
 
 
     /**
@@ -83,6 +88,12 @@ public:
      * vectors with the 7 default components.  
      */
     Parameters();
+
+    /**
+     * Scans folderPath for .hdf5 files and adds the names of
+     * any .hdf5 files found to hdftFileNameStrings.
+     */
+    void updateHDF5FileNames();
 
 };
 

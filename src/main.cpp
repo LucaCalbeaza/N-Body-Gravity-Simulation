@@ -27,19 +27,17 @@ int main() {
             parameters = gui.runMenu(window, guiWidth, guiHeight);
             gui.terminate();
             if (parameters.startSimulation) {
-                if (parameters.startingCondtion == 2) {
-                    starGen.launchCustomGen(parameters);
-                    state = AppState::GeneratingMagi;
-                } else {
-                    state = AppState::Simulating;
-                }
+                state = AppState::Simulating;
+            } else if (parameters.startGeneration) {
+                starGen.launchCustomGen(parameters);
+                state = AppState::GeneratingMagi;
             }
         } else if (state == AppState::GeneratingMagi) {
             GUI gui(window, parameters, starGen);
             gui.runGeneration(window, guiWidth, guiHeight);
             gui.terminate();
             if (starGen.pollComplete()) {
-                state = AppState::Simulating;
+                state = AppState::Menu;
             }
         } else if (state == AppState::Simulating) {
             Simulation simulation(window, parameters);

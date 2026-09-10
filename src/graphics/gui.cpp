@@ -42,7 +42,8 @@ void GUI::renderFrame() {
 
 Parameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiHeight) {
     parameters.startSimulation = false;
-    while (!glfwWindowShouldClose(window.window) && !parameters.startSimulation) {
+    parameters.startGeneration = false;
+    while (!glfwWindowShouldClose(window.window) && !parameters.startSimulation &&!parameters.startGeneration) {
         glfwPollEvents();
         cycleFrame();
 
@@ -87,8 +88,8 @@ Parameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiH
         // Start Button
         startButton();
 
+        updateSelections();
         starGen.generateStarData(parameters);
-        updateRestrictions();
         ImGui::PopFont();
         ImGui::End();
 
@@ -181,9 +182,11 @@ void GUI::coreSimulationParameters() {
     ImGui::Text("Number of Stars:");
     ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
     ImGui::PushItemWidth(-1.0f);
+    ImGui::BeginDisabled(parameters.startingCondtion == 2);
     ImGui::SliderInt("##Number of Stars", &parameters.n, 1, 250000);
     ImGui::SetItemTooltip("The number of stars has the largest affect on performance out of any setting. Performance limits will primarily depend on the graphics card.");
     ImGui::PopItemWidth();
+    ImGui::EndDisabled();
 
     // Solar Mass Slider
     ImGui::Text("Total System Solar Mass (in Billions):");
@@ -341,6 +344,7 @@ void GUI::standardInitialConditions() {
 }
 
 void GUI::magiConditions() {
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
     ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
     if (ImGui::RadioButton("MAGI: Many-Component Galaxy Initialiser:", parameters.startingCondtion == 2)) { 
         parameters.startingCondtion = 2; 
@@ -352,18 +356,18 @@ void GUI::magiConditions() {
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.04f);
     ImGui::BeginDisabled(parameters.startingCondtion != 2);
     ImGui::SetNextWindowSize(ImVec2(ImGui::GetWindowSize().x * 0.68f, 0.0f));
-    ImGui::PushItemWidth(ImGui::GetWindowSize().x * 0.68f);
-    ImGui::SameLine();
-    if (ImGui::BeginCombo("##MAGICombo", "Generate New MAGI Galaxy")) { 
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    if (ImGui::BeginCombo("##MAGICombo", "Generate New MAGI Galaxy Configuration")) { 
         // File Name Input Text
         float labelWidth = ImGui::GetWindowWidth() * 0.25f;
         static char hdf5FileNameBuffer[32] = "";
-        std::strcpy(hdf5FileNameBuffer, parameters.hdf5FileName.c_str());
+        std::strcpy(hdf5FileNameBuffer, parameters.generationHDF5FileName.c_str());
         ImGui::Text("Save File Name: ");
         ImGui::SameLine(labelWidth);
         ImGui::PushItemWidth(-1.0f);
         if (ImGui::InputText("##", hdf5FileNameBuffer, IM_ARRAYSIZE(hdf5FileNameBuffer), ImGuiInputTextFlags_CharsNoBlank)) {
-            parameters.hdf5FileName = hdf5FileNameBuffer;
+            parameters.generationHDF5FileName= hdf5FileNameBuffer;
         }
         
         // Component List
@@ -385,29 +389,38 @@ void GUI::magiConditions() {
             ImGui::PopItemWidth();
             ImGui::PopID();
         }
+        ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::GetWindowSize().x * 0.5f) / 2);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.075f);
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.1f, 0.4f, 1.0f));
+        if (ImGui::Button("Start Generation", ImVec2(ImGui::GetWindowSize().x * 0.5f, 30))) {
+            parameters.startGeneration = true;
+        }
+        ImGui::PopStyleColor();  
+
+        ImGui::EndCombo();      
+    }
+
+    // MAGI Selected Option
+    parameters.updateHDF5FileNames();
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.005f);
+    ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.037f);
+    ImGui::Text("Currently Selection MAGI Configuration: ");
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.35f); 
+    ImGui::PushItemWidth(-1.0f);
+    if (ImGui::BeginCombo("##MagiSelection", parameters.HDF5FileNames[parameters.selectedHDF5FileIndex])) {
+        for (int i = 0; i < parameters.HDF5FileNames.size(); i++) {
+            const bool is_selected = (parameters.selectedHDF5FileIndex == i);
+            if (ImGui::Selectable(parameters.HDF5FileNames[i], is_selected)) {
+                parameters.selectedHDF5FileIndex = i;
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
         ImGui::EndCombo();
     }
     ImGui::EndDisabled();
-
-    // MAGI Selected Option
-    // ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
-    // ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.037f);
-    // ImGui::Text("Currently Selection MAGI Configuration: ");
-    // if (ImGui::BeginCombo("##MagiSelection", categories[config.category])) {
-    //     for (int i = 0; i < std::size(categories); i++) {
-    //         const bool is_selected = (config.category == i);
-    //         if (ImGui::Selectable(categories[i], is_selected)) {
-    //             config.category = i;
-    //             config.resetConfig();
-    //         }
-
-    //         if (is_selected) {
-    //             ImGui::SetItemDefaultFocus();
-    //         }
-    //     }
-    //     ImGui::EndCombo();
-    // }
-    // ImGui::EndDisabled();
 }
 
 void GUI::magiComponentParametersWindow(Parameters::MagiConfig& config) {
@@ -484,18 +497,11 @@ void GUI::magiComponentParametersWindow(Parameters::MagiConfig& config) {
     ImGui::EndDisabled();
 }
 
-void GUI::updateRestrictions() {
+void GUI::updateSelections() {
     // Set N & Mass with MAGI Components
     if (parameters.startingCondtion == 2) {
-        // Ensure total N and Mass is equal to component sum
-        parameters.n = 0;
-        parameters.billionSolarMass = 0.0f;
-        for (int i = 0; i < parameters.magiParameters.size(); i++) {
-            if (parameters.magiParameters[i].enabled) {
-                parameters.n += parameters.magiParameters[i].componentStarCount;
-                parameters.billionSolarMass += parameters.magiParameters[i].componentMass;
-            }
-        }
+        // Ensure total N is equal to selected MAGI condition
+        parameters.n = parameters.stars.size();
 
         // Ensure disks are paired with a bulge
         if (parameters.magiParameters[3].enabled == true || parameters.magiParameters[4].enabled == true) {
@@ -536,7 +542,10 @@ void GUI::runGeneration(Window &window, unsigned int guiWidth, unsigned int guiH
         ImGui::PushFont(titleFont);
         ImGui::SetCursorPosY(ImGui::GetWindowSize().y * 0.5f);
         ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("MAGI Galaxy is Generating... (This may take a moment)").x) / 2);
-        ImGui::Text("MAGI Galaxy is Generating... (This may take a moment)");
+        ImGui::Text("MAGI Galaxy is Generating...");
+        ImGui::PopFont();
+        ImGui::PushFont(sectionFont);
+        ImGui::Text("For Configurations that include disks this may take up to 10 minutes");
         ImGui::PopFont();
 
 

@@ -14,7 +14,7 @@ void StarGeneration::generateStarData(Parameters& parameters) {
     } else if (parameters.startingCondtion == 1) {
         generateElipitcalPlummerData(parameters);
     } else if (parameters.startingCondtion == 2) {
-        //magiLoadHdf5(parameters);
+        magiLoadHdf5(parameters);
     }
 }
 
@@ -159,13 +159,8 @@ void StarGeneration::generateElipitcalPlummerData(Parameters& parameters) {
 }
 
 void StarGeneration::launchCustomGen(Parameters& parameters) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> distrib(1, 100000);
-    int randomNameID = distrib(gen);
-
     // Filename and Output directory
-    outputFileName = parameters.generationHDF5FileName + std::to_string(randomNameID);
+    outputFileName = parameters.generationHDF5FileName;
     std::string hdf5OutputDir =
         "/mnt/c/Users/calbe/Documents/GitHub/N-Body-Orbital-Simulation/magiGenerations/newGenerations";
 
@@ -177,11 +172,13 @@ void StarGeneration::launchCustomGen(Parameters& parameters) {
     std::string commandScript = "mkdir -p cfg/generated && mkdir -p " + hdf5OutputDir + " && ";
 
     int numberOfComponents = parameters.magiParameters.size();
+    int generationN = 0;
 
     // Create Param Files in the MAGI directory for each component
     for (int i = 0; i < numberOfComponents; i++) {
         Parameters::MagiConfig& config = parameters.magiParameters[i]; 
         if (config.enabled) {
+            generationN += config.componentStarCount;
             std::string paramFileName = outputFileName + "-C" + std::to_string(i);
             config.paramFileName = paramFileName;
             commandScript += "cat > cfg/generated/" + paramFileName + ".param << 'EOF'\n";
@@ -252,9 +249,11 @@ void StarGeneration::launchCustomGen(Parameters& parameters) {
     }
     commandScript += "EOF\n"; 
 
-    // Construct WSL Linux Command
+    std::string logPath = hdf5OutputDir + "/" + outputFileName + ".log";
+
+    //Construct WSL Linux Command
     commandScript += "bin/magi -config=generated/" + outputFileName + ".cfg -file=" + outputFileName +
-               " -Ntot=" + std::to_string(parameters.n) +
+               " -Ntot=" + std::to_string(generationN) +
                " -eps=1.5625e-2 -eta=0.5 -ft=1575.0 -snapshotInterval=25.0 -saveInterval=140.0 && ";
     commandScript += "cp dat/" + outputFileName + ".hdf5 " + hdf5OutputDir + "/" + outputFileName + ".hdf5 && ";
     commandScript += "echo done";
@@ -268,20 +267,25 @@ void StarGeneration::launchCustomGen(Parameters& parameters) {
     std::vector<char> cmdBuffer(command.begin(), command.end());
     cmdBuffer.push_back('\0');
 
-    // Run WSL Process 
-    CreateProcessA(
+    BOOL launched = CreateProcessA(
         nullptr, cmdBuffer.data(), nullptr, nullptr, FALSE,
         CREATE_NO_WINDOW, nullptr, nullptr, &si, &magiProcessInfo
     );
-    processLaunched = true;
+    if (!launched) {
+        std::cout << "CreateProcessA failed, GetLastError=" << GetLastError() << std::endl;
+    }
+    processLaunched = launched;
 }
 
 bool StarGeneration::pollComplete() {
-    // Check if magiProcessInfo is complete
     if (!processLaunched) return false;
     DWORD exitCode;
-    GetExitCodeProcess(magiProcessInfo.hProcess, &exitCode);
+    if (!GetExitCodeProcess(magiProcessInfo.hProcess, &exitCode)) {
+        std::cout << "GetExitCodeProcess failed, GetLastError=" << GetLastError() << std::endl;
+        return true;
+    }
     if (exitCode != STILL_ACTIVE) {
+        std::cout << "MAGI process exited with code " << exitCode << std::endl;
         CloseHandle(magiProcessInfo.hProcess);
         CloseHandle(magiProcessInfo.hThread);
         return true;
@@ -311,7 +315,8 @@ void StarGeneration::magiLoadHdf5(Parameters& parameters) {
 
     try {
         // Load File
-        H5::H5File file("magiGenerations/newGenerations/" + parameters.selectedHDF5FileName + ".hdf5", H5F_ACC_RDONLY);
+        std::string HDF5FileName = parameters.HDF5FileNames[parameters.selectedHDF5FileIndex];
+        H5::H5File file("magiGenerations/newGenerations/" + HDF5FileName + ".hdf5", H5F_ACC_RDONLY);
 
         // Divide into component sub groups
         H5::Group root = file.openGroup("/");

@@ -100,11 +100,11 @@ public:
     void magiComponentParametersWindow(Parameters::MagiConfig& config);
 
     /**
-     * Updated the restrictions to ensure no invalid conditions exist 
+     * Updated the selection to ensure no invalid conditions exist 
      * (ex. a MAGI disk without a bulge) and to ensure N and mass line up 
      * with the sum of the components. 
      */
-    void updateRestrictions();
+    void updateSelections();
 
     /**
      * Draw the start button for the GUI.
