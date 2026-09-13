@@ -150,13 +150,16 @@ void GUI::renderAndColorCondition() {
     if (ImGui::RadioButton("Point Body", parameters.renderMethod == 1)) { 
         parameters.renderMethod = 1;
     }
-    ImGui::SetItemTooltip("Stars are rendered as glowing points (Recommended).");
+    ImGui::SetItemTooltip("Stars are rendered as glowing points (Recommended)."); 
+
+    ImGui::BeginDisabled(parameters.startingCondtion == 2);
     ImGui::SameLine(ImGui::GetWindowSize().x * 0.77f);
     ImGui::ColorEdit4("Min Velocity", parameters.minColor, colorPickerFlags);  
     ImGui::SetItemTooltip("Color at the start of the velocity gradient.");
     ImGui::SameLine();
     ImGui::ColorEdit4("Max Velocity", parameters.maxColor, colorPickerFlags);
     ImGui::SetItemTooltip("Color at the end of the velocity gradient.");
+    ImGui::EndDisabled();
     
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
     ImGui::Text("Star Size:");
@@ -288,6 +291,7 @@ void GUI::standardInitialConditions() {
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
     if (ImGui::RadioButton("Random Uniform Distribution", parameters.startingCondtion == 0)) { 
         parameters.startingCondtion = 0;
+        parameters.useSetStarColor = false;
     }
     ImGui::SetItemTooltip("Star postiions generated in a random uniform distribution within the selected shape. Initial velocities are set to 0.");
 
@@ -317,6 +321,7 @@ void GUI::standardInitialConditions() {
     ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
     if (ImGui::RadioButton("Elipitcal Galaxy", parameters.startingCondtion == 1)) { 
         parameters.startingCondtion = 1; 
+        parameters.useSetStarColor = false;
     }
     ImGui::SetItemTooltip("Star postiions generated across a mass density profile following Plummer's method. Initial velocities are determined"
                         "\nby randomizing from a range capped at the escape velocity and then applying rejection sampling against a isotropic"
@@ -347,7 +352,8 @@ void GUI::magiConditions() {
     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetWindowSize().y * 0.01f);
     ImGui::BeginDisabled(!parameters.window3D || !parameters.simulation3D);
     if (ImGui::RadioButton("MAGI: Many-Component Galaxy Initialiser:", parameters.startingCondtion == 2)) { 
-        parameters.startingCondtion = 2; 
+        parameters.startingCondtion = 2;
+        parameters.useSetStarColor = true;  
     }
     ImGui::SetItemTooltip("TBA");
     ImGui::EndDisabled();
@@ -541,10 +547,11 @@ void GUI::runGeneration(Window &window, unsigned int guiWidth, unsigned int guiH
         // Title Text
         ImGui::PushFont(titleFont);
         ImGui::SetCursorPosY(ImGui::GetWindowSize().y * 0.5f);
-        ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("MAGI Galaxy is Generating... (This may take a moment)").x) / 2);
+        ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("MAGI Galaxy is Generating...").x) / 2);
         ImGui::Text("MAGI Galaxy is Generating...");
         ImGui::PopFont();
         ImGui::PushFont(sectionFont);
+        ImGui::SetCursorPosX((ImGui::GetWindowSize().x - ImGui::CalcTextSize("For Configurations that include disks this may take up to 10 minutes").x) / 2);
         ImGui::Text("For Configurations that include disks this may take up to 10 minutes");
         ImGui::PopFont();
 

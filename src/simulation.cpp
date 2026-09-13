@@ -53,7 +53,8 @@ Simulation::Simulation(Window &window, Parameters parameters) :
     renderMethod(parameters.renderMethod),     
     bodyRadius(parameters.bodyRadius),       
     minColor(glm::vec3(parameters.minColor[0], parameters.minColor[1], parameters.minColor[2])),
-    maxColor(glm::vec3(parameters.maxColor[0], parameters.maxColor[1], parameters.maxColor[2]))    
+    maxColor(glm::vec3(parameters.maxColor[0], parameters.maxColor[1], parameters.maxColor[2])),
+    useSetStarColor(parameters.useSetStarColor)    
     {
     
     // Scale Variables
@@ -71,6 +72,7 @@ Simulation::Simulation(Window &window, Parameters parameters) :
 
     generateMesh();
     mesh.loadBodies(stars);
+    mesh.loadColors(stars);
     mesh.initBarnesHutTree(simulation3D);
 
 
@@ -130,37 +132,41 @@ void Simulation::run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         meshShader.use();
-
-        // pass projection matrix to shader 
-        glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
-        glm::mat4 view = window.camera.GetViewMatrix();
-
-        if (renderMethod == 0) {
-            meshShader.use();
-            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
-            glUniform1f(glGetUniformLocation(meshShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
-            glUniform3f(glGetUniformLocation(meshShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
-            glUniform3f(glGetUniformLocation(meshShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
-            mesh.drawSSBOMesh();
-        } else {
-            pointShader.use();
-            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
-            glUniform1f(glGetUniformLocation(pointShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
-            glUniform3f(glGetUniformLocation(pointShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
-            glUniform3f(glGetUniformLocation(pointShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
-            glUniform1f(glGetUniformLocation(pointShader.ID, "bodyRadius"), bodyRadius);
-            glUniform1f(glGetUniformLocation(pointShader.ID, "fovY"), glm::radians(window.camera.zoom));
-            glUniform1f(glGetUniformLocation(pointShader.ID, "viewportHeight"), (float)window.height);
-            mesh.drawSSBOPoints();
-        }
+        renderStars();
 
         // Swap buffers and update window titleb
         std::string title = "N-Body Gravity Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string(((int)currentFrameTime - startingTime) * (int)timeScale) + " Million years";
         window.update(title.c_str());    
     }
     terminate();
+}
+
+void Simulation::renderStars() {
+    glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
+    glm::mat4 view = window.camera.GetViewMatrix();
+
+    if (renderMethod == 0) {
+        meshShader.use();
+        glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+        glUniform1f(glGetUniformLocation(meshShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+        glUniform3f(glGetUniformLocation(meshShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+        glUniform3f(glGetUniformLocation(meshShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+        glUniform1i(glGetUniformLocation(meshShader.ID, "useSetStarColor"), useSetStarColor);
+        mesh.drawSSBOMesh();
+    } else {
+        pointShader.use();
+        glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+        glUniform1f(glGetUniformLocation(pointShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+        glUniform3f(glGetUniformLocation(pointShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+        glUniform3f(glGetUniformLocation(pointShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+        glUniform1f(glGetUniformLocation(pointShader.ID, "bodyRadius"), bodyRadius);
+        glUniform1f(glGetUniformLocation(pointShader.ID, "fovY"), glm::radians(window.camera.zoom));
+        glUniform1f(glGetUniformLocation(pointShader.ID, "viewportHeight"), (float)window.height);
+        glUniform1i(glGetUniformLocation(pointShader.ID, "useSetStarColor"), useSetStarColor);
+        mesh.drawSSBOPoints();
+    }
 }
 
 void Simulation::updatePhysicsBruteForce() {

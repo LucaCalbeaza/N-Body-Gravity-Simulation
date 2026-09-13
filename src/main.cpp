@@ -37,6 +37,7 @@ int main() {
             gui.runGeneration(window, guiWidth, guiHeight);
             gui.terminate();
             if (starGen.pollComplete()) {
+                starGen.annotateHdf5Components("magiGenerations/newGenerations/" + parameters.generationHDF5FileName + ".hdf5", parameters);
                 state = AppState::Menu;
             }
         } else if (state == AppState::Simulating) {

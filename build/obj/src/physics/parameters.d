@@ -129,7 +129,55 @@ build/obj/src/physics/parameters.o: src/physics/parameters.cpp \
  include/glm/trigonometric.hpp include/glm/detail/func_trigonometric.inl \
  include/glm/packing.hpp include/glm/detail/func_packing.inl \
  include/glm/detail/type_half.hpp include/glm/detail/type_half.inl \
- include/glm/integer.hpp include/glm/detail/func_integer.inl
+ include/glm/integer.hpp include/glm/detail/func_integer.inl \
+ include/glm/gtc/matrix_transform.hpp \
+ include/glm/gtc/../ext/matrix_projection.hpp \
+ include/glm/gtc/../ext/../gtc/constants.hpp \
+ include/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp \
+ include/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp \
+ include/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl \
+ include/glm/gtc/../ext/../gtc/constants.inl \
+ include/glm/gtc/../ext/matrix_projection.inl \
+ include/glm/gtc/../ext/matrix_clip_space.hpp \
+ include/glm/gtc/../ext/matrix_clip_space.inl \
+ include/glm/gtc/../ext/matrix_transform.hpp \
+ include/glm/gtc/../ext/matrix_transform.inl \
+ include/glm/gtc/matrix_transform.inl include/glm/gtc/type_ptr.hpp \
+ include/glm/gtc/../gtc/quaternion.hpp \
+ include/glm/gtc/../gtc/../ext/vector_relational.hpp \
+ include/glm/gtc/../gtc/../ext/vector_relational.inl \
+ include/glm/gtc/../gtc/../ext/../detail/type_float.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/setup.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_common.hpp \
+ include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.hpp \
+ include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_common.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_float.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/type_quat.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.inl \
+ include/glm/gtc/../gtc/../ext/../detail/type_quat.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_float_precision.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_double.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_double_precision.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_trigonometric.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_trigonometric.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_transform.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_transform.inl \
+ include/glm/gtc/../gtc/quaternion.inl include/glm/gtc/../gtc/epsilon.hpp \
+ include/glm/gtc/../gtc/../detail/setup.hpp \
+ include/glm/gtc/../gtc/epsilon.inl include/glm/gtc/../gtc/vec1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_bool1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_bool1_precision.hpp \
+ include/glm/gtc/../gtc/../ext/vector_float1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_float1_precision.hpp \
+ include/glm/gtc/../gtc/../ext/vector_double1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_double1_precision.hpp \
+ include/glm/gtc/../gtc/../ext/vector_int1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_int1_sized.hpp \
+ include/glm/gtc/../gtc/../ext/vector_uint1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp \
+ include/glm/gtc/type_ptr.inl
 src/physics/parameters.h:
 src/physics/../physics/body.h:
 include/glm/glm.hpp:
@@ -274,3 +322,54 @@ include/glm/detail/type_half.hpp:
 include/glm/detail/type_half.inl:
 include/glm/integer.hpp:
 include/glm/detail/func_integer.inl:
+include/glm/gtc/matrix_transform.hpp:
+include/glm/gtc/../ext/matrix_projection.hpp:
+include/glm/gtc/../ext/../gtc/constants.hpp:
+include/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp:
+include/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp:
+include/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl:
+include/glm/gtc/../ext/../gtc/constants.inl:
+include/glm/gtc/../ext/matrix_projection.inl:
+include/glm/gtc/../ext/matrix_clip_space.hpp:
+include/glm/gtc/../ext/matrix_clip_space.inl:
+include/glm/gtc/../ext/matrix_transform.hpp:
+include/glm/gtc/../ext/matrix_transform.inl:
+include/glm/gtc/matrix_transform.inl:
+include/glm/gtc/type_ptr.hpp:
+include/glm/gtc/../gtc/quaternion.hpp:
+include/glm/gtc/../gtc/../ext/vector_relational.hpp:
+include/glm/gtc/../gtc/../ext/vector_relational.inl:
+include/glm/gtc/../gtc/../ext/../detail/type_float.hpp:
+include/glm/gtc/../gtc/../ext/../detail/setup.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_common.hpp:
+include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.hpp:
+include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.inl:
+include/glm/gtc/../gtc/../ext/quaternion_common.inl:
+include/glm/gtc/../gtc/../ext/quaternion_float.hpp:
+include/glm/gtc/../gtc/../ext/../detail/type_quat.hpp:
+include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.hpp:
+include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.inl:
+include/glm/gtc/../gtc/../ext/../detail/type_quat.inl:
+include/glm/gtc/../gtc/../ext/quaternion_float_precision.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_double.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_double_precision.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_trigonometric.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_trigonometric.inl:
+include/glm/gtc/../gtc/../ext/quaternion_transform.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_transform.inl:
+include/glm/gtc/../gtc/quaternion.inl:
+include/glm/gtc/../gtc/epsilon.hpp:
+include/glm/gtc/../gtc/../detail/setup.hpp:
+include/glm/gtc/../gtc/epsilon.inl:
+include/glm/gtc/../gtc/vec1.hpp:
+include/glm/gtc/../gtc/../ext/vector_bool1.hpp:
+include/glm/gtc/../gtc/../ext/vector_bool1_precision.hpp:
+include/glm/gtc/../gtc/../ext/vector_float1.hpp:
+include/glm/gtc/../gtc/../ext/vector_float1_precision.hpp:
+include/glm/gtc/../gtc/../ext/vector_double1.hpp:
+include/glm/gtc/../gtc/../ext/vector_double1_precision.hpp:
+include/glm/gtc/../gtc/../ext/vector_int1.hpp:
+include/glm/gtc/../gtc/../ext/vector_int1_sized.hpp:
+include/glm/gtc/../gtc/../ext/vector_uint1.hpp:
+include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp:
+include/glm/gtc/type_ptr.inl:

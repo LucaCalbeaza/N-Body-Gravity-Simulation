@@ -7,9 +7,13 @@
 #define PARAMETERS_H
 
 #include <vector>
+#include <utility>
 #include <string>
 #include <filesystem>
-#include "../physics/body.h"  
+#include "../physics/body.h" 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp> 
 
 
 
@@ -67,6 +71,7 @@ public:
     
     // Visuals & Render
     int renderMethod = 1;
+    float useSetStarColor = false;
     float minColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};  
     float maxColor[4] = {1.0f, 1.0f, 1.0f, 1.0f}; 
     float bodyRadius = 0.005f; 

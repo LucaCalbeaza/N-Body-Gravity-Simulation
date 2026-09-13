@@ -82,6 +82,7 @@ public:
     unsigned int secondaryStartingCondtion;
     glm::vec3 minColor;
     glm::vec3 maxColor;
+    bool useSetStarColor = false;
 
 
 
@@ -104,6 +105,15 @@ private:
      * de-allocates resources afterwards.
      */
     void run();
+
+    /**
+     * Sets up the camera projection matrix that gets passed to the 
+     * vertex shader and renders the stars based on the given parameter 
+     * value of renderMethod:
+     * If renderMethod = 0, render the stars as icosphere Meshes. 
+     * If renderMethod = 1, render the stars as glowing points. 
+     */
+    void renderStars();
 
     /**
      * Updates the acceleration, velocity and position of each star by 

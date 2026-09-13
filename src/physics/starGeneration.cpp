@@ -36,7 +36,8 @@ void StarGeneration::generateUniformDistributionData(Parameters& parameters) {
             glm::vec3 position = glm::vec3(genSize(gen),  genSize(gen), (parameters.simulation3D) ? genSize(gen) : 0);
             glm::vec3 veloctiy = glm::vec3(0);
             glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-            Body star(position, veloctiy, acceleration, normalizedMass/parameters.n);
+            glm::vec3 color = glm::vec3(0.0f,  0.0f,  0.0f);
+            Body star(position, veloctiy, acceleration, normalizedMass/parameters.n, color);
             parameters.stars.push_back(star);
         }
     } else {
@@ -55,7 +56,8 @@ void StarGeneration::generateUniformDistributionData(Parameters& parameters) {
             glm::vec3 position = glm::vec3(x, y, z);
             glm::vec3 veloctiy = glm::vec3(0);
             glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-            Body star(position, veloctiy, acceleration, normalizedMass/parameters.n);
+            glm::vec3 color = glm::vec3(0.0f,  0.0f,  0.0f);
+            Body star(position, veloctiy, acceleration, normalizedMass/parameters.n, color);
             parameters.stars.push_back(star);
         }
     }
@@ -120,7 +122,8 @@ void StarGeneration::generateElipitcalPlummerData(Parameters& parameters) {
 
         // Add Star
         glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-        Body star(position, velocity, acceleration, particleMass);
+        glm::vec3 color = glm::vec3(0.0f,  0.0f,  0.0f);
+        Body star(position, velocity, acceleration, particleMass, color);
         parameters.stars.push_back(star);
     }
 
@@ -161,8 +164,7 @@ void StarGeneration::generateElipitcalPlummerData(Parameters& parameters) {
 void StarGeneration::launchCustomGen(Parameters& parameters) {
     // Filename and Output directory
     outputFileName = parameters.generationHDF5FileName;
-    std::string hdf5OutputDir =
-        "/mnt/c/Users/calbe/Documents/GitHub/N-Body-Orbital-Simulation/magiGenerations/newGenerations";
+    std::string hdf5OutputDir = getHDF5OutputDir();
 
     // Default Parameter Options
     const float DISK_RADIAL_DISPERSION = -1.0f; 
@@ -173,11 +175,13 @@ void StarGeneration::launchCustomGen(Parameters& parameters) {
 
     int numberOfComponents = parameters.magiParameters.size();
     int generationN = 0;
+    lastComponentOrder.clear();
 
     // Create Param Files in the MAGI directory for each component
     for (int i = 0; i < numberOfComponents; i++) {
         Parameters::MagiConfig& config = parameters.magiParameters[i]; 
         if (config.enabled) {
+            lastComponentOrder.push_back(config.name);
             generationN += config.componentStarCount;
             std::string paramFileName = outputFileName + "-C" + std::to_string(i);
             config.paramFileName = paramFileName;
@@ -277,6 +281,23 @@ void StarGeneration::launchCustomGen(Parameters& parameters) {
     processLaunched = launched;
 }
 
+std::string StarGeneration::getHDF5OutputDir() {
+    // Get path to project directory
+    std::string winPath = std::filesystem::current_path().string();
+    std::string hdf5Path = winPath;
+    if (hdf5Path.size() >= 2 && hdf5Path[1] == ':') {
+        char driveLetter = std::tolower(static_cast<unsigned char>(hdf5Path[0]));
+        hdf5Path = "/mnt/" + std::string(1, driveLetter) + hdf5Path.substr(2);
+    }
+    std::replace(hdf5Path.begin(), hdf5Path.end(), '\\', '/');
+
+    // Add relative folder location from project root
+    hdf5Path += "/magiGenerations/newGenerations";
+    
+    return hdf5Path;
+}
+
+
 bool StarGeneration::pollComplete() {
     if (!processLaunched) return false;
     DWORD exitCode;
@@ -291,6 +312,49 @@ bool StarGeneration::pollComplete() {
         return true;
     }
     return false; 
+}
+
+void StarGeneration::annotateHdf5Components(const std::string& hdf5FilePath, Parameters& parameters) {
+    try {
+        H5::H5File file(hdf5FilePath, H5F_ACC_RDWR);
+
+        // Open Header group
+        H5::Group headerGroup;
+        if (file.nameExists("Header")) {
+            headerGroup = file.openGroup("Header");
+        } else {
+            headerGroup = file.createGroup("Header");
+        }
+
+        // Define dataspace
+        const hsize_t dims[1] = {5};
+        H5::DataSpace attrSpace(1, dims);
+        std::vector<Parameters::MagiConfig> configs = parameters.magiParameters;
+        int starCounts[5] = {(configs[0].enabled) ? configs[0].componentStarCount : 0, 
+                             (configs[3].enabled) ? configs[3].componentStarCount : 0, 
+                             (configs[4].enabled) ? configs[4].componentStarCount : 0, 
+                             (configs[1].enabled) ? configs[1].componentStarCount : 0,
+                             (configs[2].enabled) ? configs[2].componentStarCount : 0};
+
+        const std::string attrName = "ComponentStarCounts";
+        
+        // Remove any existing attribute
+        if (headerGroup.attrExists(attrName)) {
+            headerGroup.removeAttr(attrName);
+        }
+
+        // Create and write the attribute
+        H5::Attribute attr = headerGroup.createAttribute(
+            attrName, H5::PredType::NATIVE_INT, attrSpace);
+        attr.write(H5::PredType::NATIVE_INT, starCounts);
+
+        attr.close();
+        headerGroup.close();
+        file.close();
+    }
+    catch (H5::Exception& e) {
+        throw std::runtime_error("HDF5 error while annotating file: " + e.getDetailMsg());
+    }  
 }
 
 void StarGeneration::magiLoadHdf5(Parameters& parameters) {
@@ -317,6 +381,20 @@ void StarGeneration::magiLoadHdf5(Parameters& parameters) {
         // Load File
         std::string HDF5FileName = parameters.HDF5FileNames[parameters.selectedHDF5FileIndex];
         H5::H5File file("magiGenerations/newGenerations/" + HDF5FileName + ".hdf5", H5F_ACC_RDONLY);
+
+        // Read ComponentStarCounts attribute 
+        H5::Group headerGroup = file.openGroup("Header");
+        H5::Attribute componentStarCountsAttr = headerGroup.openAttribute("ComponentStarCounts");
+
+        int starCounts[5] = {0, 0, 0, 0, 0};
+        componentStarCountsAttr.read(H5::PredType::NATIVE_INT, starCounts);
+
+        componentStarCountsAttr.close();
+        headerGroup.close();
+
+        int currentStar = 0; 
+        int currentComponent = 0;
+        int componentChangeTarget = starCounts[0];
 
         // Divide into component sub groups
         H5::Group root = file.openGroup("/");
@@ -352,14 +430,122 @@ void StarGeneration::magiLoadHdf5(Parameters& parameters) {
 
             // Create Stars
             for (size_t i = 0; i < n; i++) {
+                while (currentStar == componentChangeTarget) {
+                    currentComponent++;
+                    componentChangeTarget += starCounts[currentComponent]; 
+                }
+                currentStar++;
+
                 glm::vec3 position = glm::vec3(positionVector[3 * i], positionVector[3 * i + 1], positionVector[3 * i + 2]) * Lscale;
                 glm::vec3 veloctiy = glm::vec3(velocityVector[3 * i], velocityVector[3 * i + 1], velocityVector[3 * i + 2]) * Vscale;
                 glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-                Body star(position, veloctiy, acceleration, massVector[i]);
+                glm::vec3 color = generateColor(currentComponent);
+                Body star(position, veloctiy, acceleration, massVector[i], color);
                 parameters.stars.push_back(star);
             }
         }
     } catch (H5::Exception& e) {
         std::cout << "HDF5 error: " << e.getCDetailMsg() << std::endl;
     }
+}
+
+glm::vec3 StarGeneration::generateColor(int componentType) {
+    std::random_device randomDevice;
+    std::mt19937 gen(randomDevice());
+    std::uniform_real_distribution<float> genNormal(0.0f, 1.0f);
+    float randomFloat = genNormal(gen);
+
+    switch(componentType) { 
+        // Dark Matter Halo
+        case 0:
+            colorRatios = {
+            {glm::vec3(0.616f, 0.706f, 1.0f), 0.0f},        // Type O Star Color : Blue
+            {glm::vec3(0.667f, 0.749f, 1.0f), 0.0f},        // Type B Star Color : Light Blue
+            {glm::vec3(0.792f, 0.847f, 1.0f), 0.0f},        // Type A Star Color : White
+            {glm::vec3(0.984f, 0.973f, 1.0f), 0.0f},        // Type F Star Color : Yellow White
+            {glm::vec3(1.0f, 0.961f, 0.925f), 0.0f},        // Type G Star Color : Yellow
+            {glm::vec3(1.0f, 0.824f, 0.631f), 0.0f},        // Type K Star Color : Orange
+            {glm::vec3(1.0f, 0.745f, 0.498f), 0.0f},        // Type M Star Color : Red
+            {glm::vec3(0.0f, 0.0f, 0.0f), 1.0f}};           // Invisible: Black
+            break;
+        
+        // Thick Disk
+        case 1:
+            colorRatios = {
+            {glm::vec3(0.616f, 0.706f, 1.0f), 0.0f},        // Type O Star Color : Blue
+            {glm::vec3(0.667f, 0.749f, 1.0f), 0.0f},        // Type B Star Color : Light Blue
+            {glm::vec3(0.792f, 0.847f, 1.0f), 0.01f},        // Type A Star Color : White
+            {glm::vec3(0.984f, 0.973f, 1.0f), 0.01f},        // Type F Star Color : Yellow White
+            {glm::vec3(1.0f, 0.961f, 0.925f), 0.2f},        // Type G Star Color : Yellow
+            {glm::vec3(1.0f, 0.824f, 0.631f), 0.39f},        // Type K Star Color : Orange
+            {glm::vec3(1.0f, 0.745f, 0.498f), 0.39f},        // Type M Star Color : Red
+            {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f}};           // Invisible: Black         
+            break;
+        
+         // Thin Disk
+        case 2:
+            colorRatios = {
+            {glm::vec3(0.616f, 0.706f, 1.0f), 0.375f},        // Type O Star Color : Blue
+            {glm::vec3(0.667f, 0.749f, 1.0f), 0.375f},        // Type B Star Color : Light Blue
+            {glm::vec3(0.792f, 0.847f, 1.0f), 0.075f},        // Type A Star Color : White
+            {glm::vec3(0.984f, 0.973f, 1.0f), 0.075f},        // Type F Star Color : Yellow White
+            {glm::vec3(1.0f, 0.961f, 0.925f), 0.05f},        // Type G Star Color : Yellow
+            {glm::vec3(1.0f, 0.824f, 0.631f), 0.025f},        // Type K Star Color : Orange
+            {glm::vec3(1.0f, 0.745f, 0.498f), 0.025f},        // Type M Star Color : Red
+            {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f}};           // Invisible: Black         
+            break;
+        
+        // Stellar Halo
+        case 3: 
+            colorRatios = {
+            {glm::vec3(0.616f, 0.706f, 1.0f), 0.0f},        // Type O Star Color : Blue
+            {glm::vec3(0.667f, 0.749f, 1.0f), 0.0f},        // Type B Star Color : Light Blue
+            {glm::vec3(0.792f, 0.847f, 1.0f), 0.005f},        // Type A Star Color : White
+            {glm::vec3(0.984f, 0.973f, 1.0f), 0.005f},        // Type F Star Color : Yellow White
+            {glm::vec3(1.0f, 0.961f, 0.925f), 0.15f},        // Type G Star Color : Yellow
+            {glm::vec3(1.0f, 0.824f, 0.631f), 0.42f},        // Type K Star Color : Orange
+            {glm::vec3(1.0f, 0.745f, 0.498f), 0.42f},        // Type M Star Color : Red
+            {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f}};           // Invisible: Black        
+            break; 
+        
+        // Bulge
+        case 4:  
+            colorRatios = {
+            {glm::vec3(0.616f, 0.706f, 1.0f), 0.01f},        // Type O Star Color : Blue
+            {glm::vec3(0.667f, 0.749f, 1.0f), 0.01f},        // Type B Star Color : Light Blue
+            {glm::vec3(0.792f, 0.847f, 1.0f), 0.025f},        // Type A Star Color : White
+            {glm::vec3(0.984f, 0.973f, 1.0f), 0.025f},        // Type F Star Color : Yellow White
+            {glm::vec3(1.0f, 0.961f, 0.925f), 0.15f},        // Type G Star Color : Yellow
+            {glm::vec3(1.0f, 0.824f, 0.631f), 0.39f},        // Type K Star Color : Orange
+            {glm::vec3(1.0f, 0.745f, 0.498f), 0.39f},        // Type M Star Color : Red
+            {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f}};           // Invisible: Black
+            break;
+        
+        // Default 
+        default:
+            colorRatios = {
+            {glm::vec3(0.616f, 0.706f, 1.0f), 0.0f},        // Type O Star Color : Blue
+            {glm::vec3(0.667f, 0.749f, 1.0f), 0.0f},        // Type B Star Color : Light Blue
+            {glm::vec3(0.792f, 0.847f, 1.0f), 1.0f},        // Type A Star Color : White
+            {glm::vec3(0.984f, 0.973f, 1.0f), 0.0f},        // Type F Star Color : Yellow White
+            {glm::vec3(1.0f, 0.961f, 0.925f), 0.0f},        // Type G Star Color : Yellow
+            {glm::vec3(1.0f, 0.824f, 0.631f), 0.0f},        // Type K Star Color : Orange
+            {glm::vec3(1.0f, 0.745f, 0.498f), 0.0f},        // Type M Star Color : Red
+            {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f}};           // Invisible: Black
+            break;
+    }
+    
+    glm::vec3 color = glm::vec3(0.0f, 0.0f, 0.0f);
+    float ratioSum = 0.0f;
+    for (int i = 0; i < colorRatios.size(); i++) {
+        ratioSum += colorRatios[i].second;
+        if (ratioSum >= randomFloat) {
+            color = colorRatios[i].first;
+            break;
+        }
+    }
+
+    // Reset colorRatios to Base
+    
+    return color;
 }
