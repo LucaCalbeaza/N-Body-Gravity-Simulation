@@ -57,30 +57,41 @@ public:
     float fpsElapsedTime = 0.0f;
     float currentFPS = 0.0f;
 
-    // Physical & Computation Properties
+    // Star Vectors
     std::vector<Body> stars;
     std::vector<int> innerBodies;
     std::vector<int> outerBodies;
     std::vector<glm::vec3> positions;
-    unsigned int n;
-    float mass;
+
+    // Simulation Constants
     float G;
-    const float rSoft = 0.05f;
+    float mass = 1.0f;
+    const float rSoft = 0.005f;
+    float maxSpeedThreshold = 1.0f;
     float boundaryRadius = 2.0f;
+    float G_REAL = 4.5e-12f;
+
+    // Simulation Input Parameters
+    unsigned int n;
+    float billionSolarMass;
+    float galaxyUnitSize;
+    float timeScale;
     float theta;
     unsigned int computationMethod;
     unsigned int startingCondtion;
     unsigned int secondaryStartingCondtion;
-    float maxSpeedThreshold = 1.0f;
     glm::vec3 minColor;
     glm::vec3 maxColor;
+    bool useSetStarColor = false;
+
+
 
     /**
      * Simulation Constructor: Initializes and runs the simulation 
      * at the given screen dimensions at the given fps, with the 
      * given physical properties.
      */
-    Simulation(Window &window, GUI::inputParameters parameters);
+    Simulation(Window &window, Parameters parameters);
 
 private:
     /**
@@ -89,17 +100,20 @@ private:
     Mesh generateMesh();
 
     /**
-     * Generates star data based on given initial condition
-     */
-    void generateStarData();
-
-
-    /**
      * Runs the simulation updating and drawing the stars on 
      * time interval dt. Ends the simulation when the window is closed and 
      * de-allocates resources afterwards.
      */
     void run();
+
+    /**
+     * Sets up the camera projection matrix that gets passed to the 
+     * vertex shader and renders the stars based on the given parameter 
+     * value of renderMethod:
+     * If renderMethod = 0, render the stars as icosphere Meshes. 
+     * If renderMethod = 1, render the stars as glowing points. 
+     */
+    void renderStars();
 
     /**
      * Updates the acceleration, velocity and position of each star by 
@@ -129,18 +143,6 @@ private:
      * are made using the given theta threshold.
      */
     void updatePhysicsBarnesHutTreeComputeShader(float theta);
-
-    /**
-     * Adds n random stars to with randomized initial positions and 
-     * initial velocity to the simulation.
-     */
-    void generateRandomStarData();
-
-    /**
-     * Adds N stars to the simulation generated in 
-     * accordance to a Plummer density sphere 
-     */
-    void generateElipitcalPlummerData(int ellipseClass);
 
     /**
      * Return the center of mass of the stars in the system 

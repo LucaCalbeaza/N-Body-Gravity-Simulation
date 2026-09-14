@@ -145,7 +145,88 @@ build/obj/src/graphics/gui.o: src/graphics/gui.cpp src/graphics/gui.h \
  include/glm/gtc/matrix_transform.inl include/../include/imGUI/imgui.h \
  include/../include/imGUI/imconfig.h \
  include/../include/imGUI/imgui_impl_glfw.h \
- include/../include/imGUI/imgui_impl_opengl3.h
+ include/../include/imGUI/imgui_impl_opengl3.h \
+ src/graphics/../physics/starGeneration.h \
+ src/graphics/../physics/../physics/body.h \
+ src/graphics/../physics/parameters.h include/glm/gtc/type_ptr.hpp \
+ include/glm/gtc/../gtc/quaternion.hpp \
+ include/glm/gtc/../gtc/../ext/vector_relational.hpp \
+ include/glm/gtc/../gtc/../ext/vector_relational.inl \
+ include/glm/gtc/../gtc/../ext/../detail/type_float.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/setup.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_common.hpp \
+ include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.hpp \
+ include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_common.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_float.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/type_quat.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.hpp \
+ include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.inl \
+ include/glm/gtc/../gtc/../ext/../detail/type_quat.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_float_precision.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_double.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_double_precision.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_trigonometric.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_trigonometric.inl \
+ include/glm/gtc/../gtc/../ext/quaternion_transform.hpp \
+ include/glm/gtc/../gtc/../ext/quaternion_transform.inl \
+ include/glm/gtc/../gtc/quaternion.inl include/glm/gtc/../gtc/epsilon.hpp \
+ include/glm/gtc/../gtc/../detail/setup.hpp \
+ include/glm/gtc/../gtc/epsilon.inl include/glm/gtc/../gtc/vec1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_bool1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_bool1_precision.hpp \
+ include/glm/gtc/../gtc/../ext/vector_float1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_float1_precision.hpp \
+ include/glm/gtc/../gtc/../ext/vector_double1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_double1_precision.hpp \
+ include/glm/gtc/../gtc/../ext/vector_int1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_int1_sized.hpp \
+ include/glm/gtc/../gtc/../ext/vector_uint1.hpp \
+ include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp \
+ include/glm/gtc/type_ptr.inl include/hdf5/H5Cpp.h \
+ include/hdf5/H5Include.h include/hdf5/hdf5.h include/hdf5/H5public.h \
+ include/hdf5/H5pubconf.h include/hdf5/H5version.h \
+ include/hdf5/H5api_adpt.h include/hdf5/H5Apublic.h \
+ include/hdf5/H5Ipublic.h include/hdf5/H5Opublic.h \
+ include/hdf5/H5Tpublic.h include/hdf5/H5ACpublic.h \
+ include/hdf5/H5Cpublic.h include/hdf5/H5Dpublic.h \
+ include/hdf5/H5Epublic.h include/hdf5/H5Epubgen.h \
+ include/hdf5/H5ESpublic.h include/hdf5/H5Fpublic.h \
+ include/hdf5/H5FDpublic.h include/hdf5/H5Gpublic.h \
+ include/hdf5/H5Lpublic.h include/hdf5/H5Mpublic.h \
+ include/hdf5/H5VLpublic.h include/hdf5/H5VLconnector.h \
+ include/hdf5/H5Rpublic.h include/hdf5/H5MMpublic.h \
+ include/hdf5/H5Ppublic.h include/hdf5/H5Spublic.h \
+ include/hdf5/H5Zpublic.h include/hdf5/H5PLpublic.h \
+ include/hdf5/H5ESdevelop.h include/hdf5/H5FDdevelop.h \
+ include/hdf5/H5Idevelop.h include/hdf5/H5Ldevelop.h \
+ include/hdf5/H5Tdevelop.h include/hdf5/H5TSdevelop.h \
+ include/hdf5/H5Zdevelop.h include/hdf5/H5VLconnector_passthru.h \
+ include/hdf5/H5VLnative.h include/hdf5/H5FDcore.h \
+ include/hdf5/H5FDdirect.h include/hdf5/H5FDfamily.h \
+ include/hdf5/H5FDhdfs.h include/hdf5/H5FDlog.h include/hdf5/H5FDmirror.h \
+ include/hdf5/H5FDmpi.h include/hdf5/H5FDmpio.h include/hdf5/H5FDmulti.h \
+ include/hdf5/H5FDonion.h include/hdf5/H5FDros3.h include/hdf5/H5FDsec2.h \
+ include/hdf5/H5FDsplitter.h include/hdf5/H5FDstdio.h \
+ include/hdf5/H5FDwindows.h include/hdf5/H5FDsubfiling.h \
+ include/hdf5/H5FDioc.h include/hdf5/H5VLpassthru.h \
+ include/hdf5/H5Exception.h include/hdf5/H5IdComponent.h \
+ include/hdf5/H5DataSpace.h include/hdf5/H5PropList.h \
+ include/hdf5/H5FaccProp.h include/hdf5/H5FcreatProp.h \
+ include/hdf5/H5OcreatProp.h include/hdf5/H5DcreatProp.h \
+ include/hdf5/H5DxferProp.h include/hdf5/H5LcreatProp.h \
+ include/hdf5/H5LaccProp.h include/hdf5/H5DaccProp.h \
+ include/hdf5/H5Location.h include/hdf5/H5Classes.h \
+ include/hdf5/H5Object.h include/hdf5/H5AbstractDs.h \
+ include/hdf5/H5Attribute.h include/hdf5/H5DataType.h \
+ include/hdf5/H5AtomType.h include/hdf5/H5PredType.h \
+ include/hdf5/H5EnumType.h include/hdf5/H5IntType.h \
+ include/hdf5/H5FloatType.h include/hdf5/H5StrType.h \
+ include/hdf5/H5CompType.h include/hdf5/H5ArrayType.h \
+ include/hdf5/H5VarLenType.h include/hdf5/H5DataSet.h \
+ include/hdf5/H5CommonFG.h include/hdf5/H5Group.h include/hdf5/H5File.h \
+ include/hdf5/H5Library.h src/graphics/../physics/parameters.h \
+ src/graphics/../physics/body.h
 src/graphics/gui.h:
 src/graphics/window.h:
 include/glad/glad.h:
@@ -311,3 +392,135 @@ include/../include/imGUI/imgui.h:
 include/../include/imGUI/imconfig.h:
 include/../include/imGUI/imgui_impl_glfw.h:
 include/../include/imGUI/imgui_impl_opengl3.h:
+src/graphics/../physics/starGeneration.h:
+src/graphics/../physics/../physics/body.h:
+src/graphics/../physics/parameters.h:
+include/glm/gtc/type_ptr.hpp:
+include/glm/gtc/../gtc/quaternion.hpp:
+include/glm/gtc/../gtc/../ext/vector_relational.hpp:
+include/glm/gtc/../gtc/../ext/vector_relational.inl:
+include/glm/gtc/../gtc/../ext/../detail/type_float.hpp:
+include/glm/gtc/../gtc/../ext/../detail/setup.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_common.hpp:
+include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.hpp:
+include/glm/gtc/../gtc/../ext/../ext/quaternion_geometric.inl:
+include/glm/gtc/../gtc/../ext/quaternion_common.inl:
+include/glm/gtc/../gtc/../ext/quaternion_float.hpp:
+include/glm/gtc/../gtc/../ext/../detail/type_quat.hpp:
+include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.hpp:
+include/glm/gtc/../gtc/../ext/../detail/../ext/quaternion_relational.inl:
+include/glm/gtc/../gtc/../ext/../detail/type_quat.inl:
+include/glm/gtc/../gtc/../ext/quaternion_float_precision.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_double.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_double_precision.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_trigonometric.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_trigonometric.inl:
+include/glm/gtc/../gtc/../ext/quaternion_transform.hpp:
+include/glm/gtc/../gtc/../ext/quaternion_transform.inl:
+include/glm/gtc/../gtc/quaternion.inl:
+include/glm/gtc/../gtc/epsilon.hpp:
+include/glm/gtc/../gtc/../detail/setup.hpp:
+include/glm/gtc/../gtc/epsilon.inl:
+include/glm/gtc/../gtc/vec1.hpp:
+include/glm/gtc/../gtc/../ext/vector_bool1.hpp:
+include/glm/gtc/../gtc/../ext/vector_bool1_precision.hpp:
+include/glm/gtc/../gtc/../ext/vector_float1.hpp:
+include/glm/gtc/../gtc/../ext/vector_float1_precision.hpp:
+include/glm/gtc/../gtc/../ext/vector_double1.hpp:
+include/glm/gtc/../gtc/../ext/vector_double1_precision.hpp:
+include/glm/gtc/../gtc/../ext/vector_int1.hpp:
+include/glm/gtc/../gtc/../ext/vector_int1_sized.hpp:
+include/glm/gtc/../gtc/../ext/vector_uint1.hpp:
+include/glm/gtc/../gtc/../ext/vector_uint1_sized.hpp:
+include/glm/gtc/type_ptr.inl:
+include/hdf5/H5Cpp.h:
+include/hdf5/H5Include.h:
+include/hdf5/hdf5.h:
+include/hdf5/H5public.h:
+include/hdf5/H5pubconf.h:
+include/hdf5/H5version.h:
+include/hdf5/H5api_adpt.h:
+include/hdf5/H5Apublic.h:
+include/hdf5/H5Ipublic.h:
+include/hdf5/H5Opublic.h:
+include/hdf5/H5Tpublic.h:
+include/hdf5/H5ACpublic.h:
+include/hdf5/H5Cpublic.h:
+include/hdf5/H5Dpublic.h:
+include/hdf5/H5Epublic.h:
+include/hdf5/H5Epubgen.h:
+include/hdf5/H5ESpublic.h:
+include/hdf5/H5Fpublic.h:
+include/hdf5/H5FDpublic.h:
+include/hdf5/H5Gpublic.h:
+include/hdf5/H5Lpublic.h:
+include/hdf5/H5Mpublic.h:
+include/hdf5/H5VLpublic.h:
+include/hdf5/H5VLconnector.h:
+include/hdf5/H5Rpublic.h:
+include/hdf5/H5MMpublic.h:
+include/hdf5/H5Ppublic.h:
+include/hdf5/H5Spublic.h:
+include/hdf5/H5Zpublic.h:
+include/hdf5/H5PLpublic.h:
+include/hdf5/H5ESdevelop.h:
+include/hdf5/H5FDdevelop.h:
+include/hdf5/H5Idevelop.h:
+include/hdf5/H5Ldevelop.h:
+include/hdf5/H5Tdevelop.h:
+include/hdf5/H5TSdevelop.h:
+include/hdf5/H5Zdevelop.h:
+include/hdf5/H5VLconnector_passthru.h:
+include/hdf5/H5VLnative.h:
+include/hdf5/H5FDcore.h:
+include/hdf5/H5FDdirect.h:
+include/hdf5/H5FDfamily.h:
+include/hdf5/H5FDhdfs.h:
+include/hdf5/H5FDlog.h:
+include/hdf5/H5FDmirror.h:
+include/hdf5/H5FDmpi.h:
+include/hdf5/H5FDmpio.h:
+include/hdf5/H5FDmulti.h:
+include/hdf5/H5FDonion.h:
+include/hdf5/H5FDros3.h:
+include/hdf5/H5FDsec2.h:
+include/hdf5/H5FDsplitter.h:
+include/hdf5/H5FDstdio.h:
+include/hdf5/H5FDwindows.h:
+include/hdf5/H5FDsubfiling.h:
+include/hdf5/H5FDioc.h:
+include/hdf5/H5VLpassthru.h:
+include/hdf5/H5Exception.h:
+include/hdf5/H5IdComponent.h:
+include/hdf5/H5DataSpace.h:
+include/hdf5/H5PropList.h:
+include/hdf5/H5FaccProp.h:
+include/hdf5/H5FcreatProp.h:
+include/hdf5/H5OcreatProp.h:
+include/hdf5/H5DcreatProp.h:
+include/hdf5/H5DxferProp.h:
+include/hdf5/H5LcreatProp.h:
+include/hdf5/H5LaccProp.h:
+include/hdf5/H5DaccProp.h:
+include/hdf5/H5Location.h:
+include/hdf5/H5Classes.h:
+include/hdf5/H5Object.h:
+include/hdf5/H5AbstractDs.h:
+include/hdf5/H5Attribute.h:
+include/hdf5/H5DataType.h:
+include/hdf5/H5AtomType.h:
+include/hdf5/H5PredType.h:
+include/hdf5/H5EnumType.h:
+include/hdf5/H5IntType.h:
+include/hdf5/H5FloatType.h:
+include/hdf5/H5StrType.h:
+include/hdf5/H5CompType.h:
+include/hdf5/H5ArrayType.h:
+include/hdf5/H5VarLenType.h:
+include/hdf5/H5DataSet.h:
+include/hdf5/H5CommonFG.h:
+include/hdf5/H5Group.h:
+include/hdf5/H5File.h:
+include/hdf5/H5Library.h:
+src/graphics/../physics/parameters.h:
+src/graphics/../physics/body.h:

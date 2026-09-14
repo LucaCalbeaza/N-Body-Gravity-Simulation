@@ -75,7 +75,7 @@ public:
     int n;
 
     // Standard Buffers and Arrays
-    GLuint VBO, VAO, EBO, iVBO, SSBO, pointVAO;
+    GLuint VBO, VAO, EBO, iVBO, SSBO, pointVAO, colorSSBO;
 
     // Barnes-Hut Compute Shader Buffers & int variables;
     GLuint sortedIdxBuf, mortonCodeBuf, nodesBuf, nextFreeNodeBuf, scenceBoundsBuf;
@@ -90,14 +90,19 @@ public:
 
     /**
      * Returns an SSBO object ID with the given size and data attached 
-     * to the given binding
+     * to the given binding.
      */
     GLuint makeSSBO(size_t byteSize, const void* data, GLuint bindingLocation);
 
     /**
-     * Loads the given bodies into the SSBO 
+     * Loads the given bodies into the SSBO. 
      */
     void loadBodies(const std::vector<Body>& bodies);
+
+    /**
+     * Loads the fixed star colors into colorSSBO.
+     */
+    void loadColors(const std::vector<Body>& bodies);
 
     /**
      * Initializes the Barnes-Hut Tree variables and all of the 
@@ -112,12 +117,12 @@ public:
     void resetBarnesHutTree(const float sceneBounds[8], bool is3D);
 
     /**
-     * Renders the given mesh at each of the given positions
+     * Renders the given mesh at each of the given positions.
      */
     void drawInstanced(std::vector<glm::vec3>& positions, Shader shader);
 
     /**
-     * Renders the mesh at the positions given in the SSBO
+     * Renders the mesh at the positions given in the SSBO.
      */
     void drawSSBOMesh();
 

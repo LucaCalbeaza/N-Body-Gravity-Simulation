@@ -17,13 +17,14 @@ public:
     glm::vec3 position;
     glm::vec3 velocity;
     glm::vec3 acceleration;
+    glm::vec3 color; 
     float mass;
 
     /**
      * Body Constructor: Creates a body with given position, velocity, 
      * acceleration and mass.  
      */
-    Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float mass);
+    Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float mass, glm::vec3 color);
 
     /**
      * Updates position and velocity over the given time interval dt. 

@@ -30,6 +30,7 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     glGenBuffers(1, &EBO); 
     glGenBuffers(1, &iVBO); 
     glGenBuffers(1, &SSBO);
+    glGenBuffers(1, &colorSSBO);
     glGenVertexArrays(1, &pointVAO); 
     
     // Bind VAO
@@ -49,7 +50,7 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     
     // SSBO Instance Rendering Initilzation | Used only for GPU computation
     glBindBuffer(GL_ARRAY_BUFFER, SSBO);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);  
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW); 
     
     // Set up Instanced Position Attribute 
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshBody), (void*)0);  
@@ -72,6 +73,14 @@ Mesh::Mesh(std::vector<float> vertices, std::vector<unsigned int> indices, int n
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, n * sizeof(MeshBody), nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, SSBO);
+
+    // Bind Color SSBO
+    glBindBuffer(GL_ARRAY_BUFFER, colorSSBO);
+    glBufferData(GL_ARRAY_BUFFER, n * sizeof(glm::vec4), nullptr, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+    glEnableVertexAttribArray(4);
+    glVertexAttribDivisor(4, 1);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, colorSSBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindVertexArray(0);
@@ -99,6 +108,18 @@ void Mesh::loadBodies(const std::vector<Body>& bodies) {
     // Bind the SSBO to the GL SSBO type and load the position data from the SSBO 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);   
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, meshBodies.size() * sizeof(MeshBody), meshBodies.data()); 
+}
+
+void Mesh::loadColors(const std::vector<Body>& bodies) {
+    std::vector<glm::vec4> colors;
+    colors.reserve(bodies.size());
+
+    for (const Body& body : bodies) {
+        colors.push_back(glm::vec4(body.color, 1.0f));
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, colorSSBO);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, colors.size() * sizeof(glm::vec4), colors.data());
 }
 
 void Mesh::initBarnesHutTree(bool is3D) {
@@ -328,6 +349,7 @@ void Mesh::terminate() {
     glDeleteBuffers(1, &EBO);
     glDeleteBuffers(1, &iVBO);
     glDeleteBuffers(1, &SSBO);
+    glDeleteBuffers(1, &colorSSBO);
     glDeleteVertexArrays(1, &pointVAO);
 
     // Delete Barnes-Hut Compute Shader Buffers

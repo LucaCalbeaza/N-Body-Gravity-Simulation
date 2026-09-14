@@ -8,7 +8,7 @@
 #include "omp.h"
 
 
-Simulation::Simulation(Window &window, GUI::inputParameters parameters) :   
+Simulation::Simulation(Window &window, Parameters parameters) :   
     window(window),
     meshShader("src/shaders/meshVertexShader.glsl", "src/shaders/meshFragmentShader.glsl"),
     pointShader("src/shaders/pointVertexShader.glsl", "src/shaders/pointFragmentShader.glsl"),
@@ -45,19 +45,23 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     computationMethod(parameters.computationMethod),
     startingCondtion(parameters.startingCondtion),
     secondaryStartingCondtion(parameters.secondaryStartingCondition),
+    stars(parameters.stars),
     n(parameters.n),
-    mass(parameters.mass),
-    G(parameters.G),              
+    timeScale(parameters.timeScaleMyrPerSec),           
     theta(parameters.theta),
     simulation3D(parameters.simulation3D),
     renderMethod(parameters.renderMethod),     
     bodyRadius(parameters.bodyRadius),       
     minColor(glm::vec3(parameters.minColor[0], parameters.minColor[1], parameters.minColor[2])),
-    maxColor(glm::vec3(parameters.maxColor[0], parameters.maxColor[1], parameters.maxColor[2]))    
+    maxColor(glm::vec3(parameters.maxColor[0], parameters.maxColor[1], parameters.maxColor[2])),
+    useSetStarColor(parameters.useSetStarColor)    
     {
     
-    // Time Variables : FPS Update Rate
-    dt = 1.0 / 60.0f; 
+    // Scale Variables
+    galaxyUnitSize = parameters.genSizeKpc / 7.5;
+    float kpcPerUnit = parameters.genSizeKpc * 0.5f;
+    G = G_REAL * (parameters.billionSolarMass * 1e9f) / (kpcPerUnit * kpcPerUnit * kpcPerUnit);
+    dt = timeScale / 60.0f; 
     startingTime = (int)glfwGetTime();
     lastFrameTime = startingTime;
 
@@ -65,23 +69,15 @@ Simulation::Simulation(Window &window, GUI::inputParameters parameters) :
     innerBodies.reserve(n);
     outerBodies.reserve(n);
     positions.reserve(n);
-    
-    // Generate Mesh and Star Data
-    generateStarData();
+
     generateMesh();
     mesh.loadBodies(stars);
+    mesh.loadColors(stars);
     mesh.initBarnesHutTree(simulation3D);
+
 
     // Run Simulation
     run();
-}
-
-void Simulation::generateStarData() {
-    if (startingCondtion == 0) {
-        generateRandomStarData();
-    } else if (startingCondtion == 1) {
-        generateElipitcalPlummerData(secondaryStartingCondtion);
-    }
 }
 
 Mesh Simulation::generateMesh() {
@@ -119,13 +115,13 @@ void Simulation::run() {
         // multiple times to account for loss. Limit set to maxStepsPerFrame
         // to prevent the frame drop from spiraling out of control. 
         int steps = 0;
-        while (frameTimeAccumulation >= dt && steps < maxStepsPerFrame) {
+        while (frameTimeAccumulation >= (dt / timeScale) && steps < maxStepsPerFrame) {
             if (computationMethod == 0) {
                 updatePhysicsBarnesHutTreeComputeShader(theta);
             } else {
                 updatePhysicsBruteForceComputeShader();
             }
-            frameTimeAccumulation -= dt;
+            frameTimeAccumulation -= (dt / timeScale);
             steps++;
             if (steps == maxStepsPerFrame) {
                 frameTimeAccumulation = 0;
@@ -136,37 +132,41 @@ void Simulation::run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         meshShader.use();
+        renderStars();
 
-        // pass projection matrix to shader 
-        glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
-        glm::mat4 view = window.camera.GetViewMatrix();
-
-        if (renderMethod == 0) {
-            meshShader.use();
-            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
-            glUniform1f(glGetUniformLocation(meshShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
-            glUniform3f(glGetUniformLocation(meshShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
-            glUniform3f(glGetUniformLocation(meshShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
-            mesh.drawSSBOMesh();
-        } else {
-            pointShader.use();
-            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
-            glUniform1f(glGetUniformLocation(pointShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
-            glUniform3f(glGetUniformLocation(pointShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
-            glUniform3f(glGetUniformLocation(pointShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
-            glUniform1f(glGetUniformLocation(pointShader.ID, "bodyRadius"), bodyRadius);
-            glUniform1f(glGetUniformLocation(pointShader.ID, "fovY"), glm::radians(window.camera.zoom));
-            glUniform1f(glGetUniformLocation(pointShader.ID, "viewportHeight"), (float)window.height);
-            mesh.drawSSBOPoints();
-        }
-
-        // Swap buffers and update window title
-        std::string title = "N-Body Orbital Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string((int)currentFrameTime - startingTime);
+        // Swap buffers and update window titleb
+        std::string title = "N-Body Gravity Simulation - FPS: " + std::to_string((int)currentFPS) + " - Time: " + std::to_string(((int)currentFrameTime - startingTime) * (int)timeScale) + " Million years";
         window.update(title.c_str());    
     }
     terminate();
+}
+
+void Simulation::renderStars() {
+    glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
+    glm::mat4 view = window.camera.GetViewMatrix();
+
+    if (renderMethod == 0) {
+        meshShader.use();
+        glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(meshShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+        glUniform1f(glGetUniformLocation(meshShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+        glUniform3f(glGetUniformLocation(meshShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+        glUniform3f(glGetUniformLocation(meshShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+        glUniform1i(glGetUniformLocation(meshShader.ID, "useSetStarColor"), useSetStarColor);
+        mesh.drawSSBOMesh();
+    } else {
+        pointShader.use();
+        glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "projection"), 1, GL_FALSE, &projection[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(pointShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
+        glUniform1f(glGetUniformLocation(pointShader.ID, "maxSpeedThreshold"), maxSpeedThreshold);
+        glUniform3f(glGetUniformLocation(pointShader.ID, "minColor"), minColor.x, minColor.y, minColor.z);
+        glUniform3f(glGetUniformLocation(pointShader.ID, "maxColor"), maxColor.x, maxColor.y, maxColor.z);
+        glUniform1f(glGetUniformLocation(pointShader.ID, "bodyRadius"), bodyRadius);
+        glUniform1f(glGetUniformLocation(pointShader.ID, "fovY"), glm::radians(window.camera.zoom));
+        glUniform1f(glGetUniformLocation(pointShader.ID, "viewportHeight"), (float)window.height);
+        glUniform1i(glGetUniformLocation(pointShader.ID, "useSetStarColor"), useSetStarColor);
+        mesh.drawSSBOPoints();
+    }
 }
 
 void Simulation::updatePhysicsBruteForce() {
@@ -381,114 +381,6 @@ void Simulation::updatePhysicsBarnesHutTreeComputeShader(float theta) {
     glUniform1f(glGetUniformLocation(accelerationComputationShader.ID, "dt"), dt);
     glDispatchCompute(numGroups, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-}
-
-void Simulation::generateRandomStarData() {
-    // Create RNG device set between [-1.0f, 1.0f]
-    std::random_device randomDevice;
-    std::mt19937 gen(randomDevice());
-    std::uniform_real_distribution<float> genRandom(-1.0f, 1.0f);
-
-    // Generate n stars with random initial {x,y} positions between
-    // [-1.0f, 1.0f], and random initial{x,y} velocty between [-0.1f, 0.1f]
-    for (int i = 0; i < n; i++) {
-        glm::vec3 position = glm::vec3(genRandom(gen),  genRandom(gen), (simulation3D) ? genRandom(gen) : 0);
-        glm::vec3 veloctiy = glm::vec3(0.1*genRandom(gen),  0.1*genRandom(gen), (simulation3D) ? 0.1 * genRandom(gen) : 0);
-        glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-        Body star(position, veloctiy, acceleration, mass/n);
-        stars.push_back(star);
-    }
-}
-
-void Simulation::generateElipitcalPlummerData(int ellipseClass) {
-    // Particle Parameters
-    float scaleRadius = 0.5; 
-    float radialClamp = 0.999f;
-    float particleMass = mass/n;
-    float gMax = 0.1f;
-
-    // Create RNG device set between [0.0f, 1.0f)
-    std::random_device randomDevice;
-    std::mt19937 gen(randomDevice());
-    std::uniform_real_distribution<float> genRandom(0.0f, 1.0f);
-
-    for (int i = 0; i < n; i++) {
-        // Sample radius 
-        float x1 = genRandom(gen) * radialClamp;
-        float r = scaleRadius * pow(pow(x1, -2.0f / 3.0f) - 1.0f, -0.5f);
-
-        // Sample position direction
-        float x2 = genRandom(gen); 
-        float x3 = genRandom(gen);
-        float cosTheta = 1.0f - 2.0f * x2; 
-        float sinTheta = sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta)); 
-        float phi = 2.0f * M_PI * x3;
-        glm::vec3 positionDirection = glm::vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
-        glm::vec3 position = positionDirection * r;
-
-        // Find escape velocity 
-        float denominator = sqrt(r * r + scaleRadius * scaleRadius);
-        float escapeVelocity = sqrt(2.0f * G * mass / denominator);
-
-        // Sample speed Fraction 
-        float q;
-        while (true) {
-            q = genRandom(gen);
-            float g = q * q * pow(1.0f - q * q, 3.5f);
-
-            float y = genRandom(gen) * gMax;
-            if (y < g) {
-                break;
-            }
-        }
-        float speed = q * escapeVelocity;
-
-        // Sample velocity direction 
-        x2 = genRandom(gen); 
-        x3 = genRandom(gen);
-        cosTheta = 1.0f - 2.0f * x2; 
-        sinTheta = sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta)); 
-        phi = 2.0f * M_PI * x3;
-        glm::vec3 velocityDirection = glm::vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
-        glm::vec3 velocity = velocityDirection * speed;
-
-        // Add Star
-        glm::vec3 acceleration = glm::vec3(0.0f,  0.0f,  0.0f);
-        Body star(position, velocity, acceleration, particleMass);
-        stars.push_back(star);
-    }
-
-    // Flatten Ellipse according to class
-    ellipseClass = std::clamp(ellipseClass, 0, 8);
-    float axisRatio = 1.0f - (float)ellipseClass / 10.0f;
-    glm::vec3 stretch = glm::vec3(1.0f, 1.0f, axisRatio);
-
-    for (auto& star : stars) {
-        glm::vec3 stretchedPosition = star.position * stretch;
-        glm::vec3 stretchedVelocity = star.velocity * stretch;
-        
-        star.position = stretchedPosition;
-        star.velocity = stretchedVelocity;
-    }
-
-
-    // Recenter
-    glm::vec3 comPosition = glm::vec3(0.0f);
-    glm::vec3 comVelocity = glm::vec3(0.0f);
-    float massSum = 0.0f;
-
-    for (auto& star : stars) {
-        comPosition += star.position * star.mass;
-        comVelocity += star.velocity * star.mass;
-        massSum += star.mass;
-    }
-    comPosition /= massSum;
-    comVelocity /= massSum;
-
-    for (auto& star : stars) {
-        star.position -= comPosition;
-        star.velocity -= comVelocity;
-    }
 }
 
 glm::vec3 Simulation::computeCenterOfMass() {

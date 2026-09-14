@@ -10,6 +10,10 @@ layout(std430, binding = 0) readonly buffer BodiesBuffer {
     Body bodies[];
 };
 
+layout (std430, binding = 12) readonly buffer ColorBuffer {
+    vec4 colors[];
+};
+
 uniform mat4 view;
 uniform mat4 projection;
 uniform float maxSpeedThreshold;
@@ -18,6 +22,7 @@ uniform vec3 maxColor;
 uniform float bodyRadius;   
 uniform float fovY;       
 uniform float viewportHeight;
+uniform bool useSetStarColor;
 
 out vec3 ourColor;
 out float pointIntensity;
@@ -31,7 +36,12 @@ void main() {
     // Mix color across gradient dependant on speed
     float speed = length(body.velocity.xyz);
     float normalizedSpeed = clamp(speed / maxSpeedThreshold, 0.0, 1.0);
-    ourColor = mix(minColor, maxColor, normalizedSpeed);
+
+    if (useSetStarColor) {
+        ourColor = colors[gl_VertexID].rgb;
+    } else {
+        ourColor = mix(minColor, maxColor, normalizedSpeed);
+    }
 
     // Perspective-correct point size: bigger when close, smaller when far,
     // clamped so points never vanish or blow up.

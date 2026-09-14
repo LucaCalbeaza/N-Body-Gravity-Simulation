@@ -5,10 +5,11 @@
 
 #include "body.h"
 
-Body::Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float mass) {
+Body::Body(glm::vec3 position, glm::vec3 velocity, glm::vec3 acceleration, float mass, glm::vec3 color) {
     this->position = position;
     this->velocity = velocity;
     this->acceleration = acceleration;
+    this->color = color;
     this->mass = mass;
 }
 
