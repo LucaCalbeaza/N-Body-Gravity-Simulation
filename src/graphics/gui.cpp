@@ -119,6 +119,7 @@ void GUI::cameraCondition() {
         parameters.cameraCondition = 1; 
         parameters.window3D = false;
         parameters.simulation3D = false;
+        parameters.startingCondtion = 0;
     }
     ImGui::SetItemTooltip("2D Camera: Move camera with WASD keys. Initial conditions restricted to 2D conditions.");
     ImGui::PopFont();
@@ -137,7 +138,8 @@ void GUI::renderAndColorCondition() {
     ImGui::TextWrapped("Select Velocity Color Gradient");
     ImGui::PopFont();
     ImGui::PushFont(regularFont);
-    ImGui::SetItemTooltip("Star color is determined by the current velocity clamped between 0 and a max velocity threshold. Color is assigned across a gradient.");
+    ImGui::SetItemTooltip("Star color is determined by the current velocity clamped between 0 and a max velocity threshold. Color is assigned across a gradient."
+                        "\nThis setting is disabled when a MAGI generation is chosen, MAGI generations choose star color based on component types.");
     ImGui::PopFont();
     ImGui::Separator();
 
@@ -187,7 +189,8 @@ void GUI::coreSimulationParameters() {
     ImGui::PushItemWidth(-1.0f);
     ImGui::BeginDisabled(parameters.startingCondtion == 2);
     ImGui::SliderInt("##Number of Stars", &parameters.n, 1, 250000);
-    ImGui::SetItemTooltip("The number of stars has the largest affect on performance out of any setting. Performance limits will primarily depend on the graphics card.");
+    ImGui::SetItemTooltip("The number of stars has the largest affect on performance out of any setting. Performance limits will primarily depend on the graphics card."
+                        "\nThis setting is locked when a MAGI generation is enabled as MAGI conditions are generated with a fixed star count.");
     ImGui::PopItemWidth();
     ImGui::EndDisabled();
 
@@ -355,7 +358,7 @@ void GUI::magiConditions() {
         parameters.startingCondtion = 2;
         parameters.useSetStarColor = true;  
     }
-    ImGui::SetItemTooltip("TBA");
+    ImGui::SetItemTooltip("Initial condition generated using the MAGI generation tool");
     ImGui::EndDisabled();
 
     // MAGI Galaxy Dropdown Box
@@ -405,6 +408,12 @@ void GUI::magiConditions() {
 
         ImGui::EndCombo();      
     }
+    ImGui::SetItemTooltip("MAGI INSTALLATION NEEDED: Generate a new MAGI condition. Generation is made up of 5 different"
+                        "\navaliable components each with their own parameters. Total system mass is still dependent on"
+                        "\nthe primary system mass parameter. Mass between components is relative to each other and is"
+                        "\nnormalized to 1.0 before being converted to the system mass during generation. Generations"
+                        "\ninvolving disks take much longer (up to 10 minutes). All MAGI conditions files can be found"
+                        "\nin the /magiGenerations/newGenerations folder of the project directory.");
 
     // MAGI Selected Option
     parameters.updateHDF5FileNames();

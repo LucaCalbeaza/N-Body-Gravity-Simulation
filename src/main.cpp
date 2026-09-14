@@ -27,6 +27,7 @@ int main() {
             parameters = gui.runMenu(window, guiWidth, guiHeight);
             gui.terminate();
             if (parameters.startSimulation) {
+                window.resetCamera(parameters.window3D);
                 state = AppState::Simulating;
             } else if (parameters.startGeneration) {
                 starGen.launchCustomGen(parameters);
