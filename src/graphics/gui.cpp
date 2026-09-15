@@ -89,7 +89,15 @@ Parameters GUI::runMenu(Window &window, unsigned int guiWidth, unsigned int guiH
         startButton();
 
         updateSelections();
-        starGen.generateStarData(parameters);
+        if (parameters.startingCondtion != previousStartCondition || parameters.selectedHDF5FileIndex != previoushdf5FileIndex || 
+            parameters.billionSolarMass != previousMass || parameters.genSizeKpc != previousSize || parameters.secondaryStartingCondition != previousSecondaryStartCondition) {
+            starGen.generateStarData(parameters);  
+            previousStartCondition = parameters.startingCondtion;
+            previousSecondaryStartCondition = parameters.secondaryStartingCondition;
+            previoushdf5FileIndex = parameters.selectedHDF5FileIndex; 
+            previousMass = parameters.billionSolarMass;
+            previousSize = parameters.genSizeKpc; 
+        }
         ImGui::PopFont();
         ImGui::End();
 
@@ -133,7 +141,7 @@ void GUI::renderAndColorCondition() {
     ImGui::PushFont(regularFont);
     ImGui::SetItemTooltip("Note: Any slider can be typed into with Ctrl + Left Click.");
     ImGui::PopFont();
-    ImGui::SameLine(ImGui::GetWindowSize().x * 0.73f); 
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.77f); 
     ImGui::PushFont(sectionFont);
     ImGui::TextWrapped("Select Velocity Color Gradient");
     ImGui::PopFont();
@@ -155,7 +163,7 @@ void GUI::renderAndColorCondition() {
     ImGui::SetItemTooltip("Stars are rendered as glowing points (Recommended)."); 
 
     ImGui::BeginDisabled(parameters.startingCondtion == 2);
-    ImGui::SameLine(ImGui::GetWindowSize().x * 0.77f);
+    ImGui::SameLine(ImGui::GetWindowSize().x * 0.77f); 
     ImGui::ColorEdit4("Min Velocity", parameters.minColor, colorPickerFlags);  
     ImGui::SetItemTooltip("Color at the start of the velocity gradient.");
     ImGui::SameLine();

@@ -6,10 +6,8 @@
 #include "physics/parameters.h"
 
 // Window Parameters
-const int guiWidth = 1000;
-const int guiHeight = 1000;
-const int simulationWidth = 1000;
-const int simulationHeight = 1000;
+const int windowWidth = 1500;
+const int windowHeight = 1000;
 
 enum class AppState { Menu, GeneratingMagi, Simulating };
 AppState state = AppState::Menu;
@@ -17,14 +15,14 @@ StarGeneration starGen{};
 
 // Main Class
 int main() {
-    Window window(guiWidth, guiHeight, "N-Body Orbital Simulation", true);
+    Window window(windowWidth, windowHeight, "N-Body Orbital Simulation", true);
     Parameters parameters{};
 
     while (!glfwWindowShouldClose(window.window)) {
         if (state == AppState::Menu) {
-            glfwSetWindowSize(window.window, guiWidth, guiHeight);
+            glfwSetWindowSize(window.window, windowWidth, windowHeight);
             GUI gui(window, parameters, starGen);
-            parameters = gui.runMenu(window, guiWidth, guiHeight);
+            parameters = gui.runMenu(window, window.width, window.height);
             gui.terminate();
             if (parameters.startSimulation) {
                 window.resetCamera(parameters.window3D);
@@ -35,7 +33,7 @@ int main() {
             }
         } else if (state == AppState::GeneratingMagi) {
             GUI gui(window, parameters, starGen);
-            gui.runGeneration(window, guiWidth, guiHeight);
+            gui.runGeneration(window, windowWidth, windowHeight);
             gui.terminate();
             if (starGen.pollComplete()) {
                 starGen.annotateHdf5Components("magiGenerations/newGenerations/" + parameters.generationHDF5FileName + ".hdf5", parameters);

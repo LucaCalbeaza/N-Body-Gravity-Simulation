@@ -22,7 +22,7 @@ Window::Window(unsigned int width, unsigned int height, const char* title, bool 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    //glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     // Create GLFW window object, set to context, and check for errors
     window = glfwCreateWindow(width, height, title, NULL, NULL);
@@ -76,6 +76,9 @@ void Window::processInput(float dt) {
 };
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    win->width = width;
+    win->height = height;
     glViewport(0, 0, width, height);
 }
 
