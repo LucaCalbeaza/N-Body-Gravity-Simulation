@@ -2,6 +2,7 @@
 
 A real-time, GPU-accelerated N-body gravitational simulation project that I've been working on in my own time. Written in C++ and OpenGL. The simulation renders thousands of stars which interact with each other through gravitational attraction. The program launches with an interactive GUI that allows the user to edit the simulation parameters before starting. I've integrated the open source MAGI (Many-Component Galaxy Initialiser) tool into the project, that allows the user to generate and load modern N-Body simulation initial conditions for galaxies. The MAGI generation tool is optional as it runs on Linux and thus requires a Linux environment (such as WSL) to use on windows. I've added 4 (Plan to Add more) base MAGI generation files that can be loaded in as the initial condition for those who cannot run the MAGI tool, however to create new MAGI conditions the user needs to run the MAGI tool through a Linux environment as stated before.  
 
+### YouTube Demo:
 [![Simulation Demos](https://img.youtube.com/vi/IM-3T5qZN10/maxresdefault.jpg)](https://www.youtube.com/watch?v=IM-3T5qZN10)
 
 ### Simulation Parameters
