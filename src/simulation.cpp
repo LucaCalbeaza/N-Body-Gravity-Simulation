@@ -142,7 +142,8 @@ void Simulation::run() {
 }
 
 void Simulation::renderStars() {
-    glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), 1.0f, 0.1f, 100.0f);
+    float aspectRatio = (float)window.width / (float)window.height;
+    glm::mat4 projection = glm::perspective(glm::radians(window.camera.zoom), aspectRatio, 0.1f, 100.0f);
     glm::mat4 view = window.camera.GetViewMatrix();
 
     if (renderMethod == 0) {

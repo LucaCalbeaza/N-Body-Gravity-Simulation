@@ -209,7 +209,7 @@ void StarGeneration::launchCustomGen(Parameters& parameters) {
                 commandScript += std::to_string(config.scaleRadius) + "\n";
                 commandScript += std::to_string(config.scaleHeight) + "\n";
                 // Sersic disks require an extra parameter
-                if (config.magiProfileIndex == -2) { 
+                if (config.magiProfileIndex == 1) { 
                     commandScript += std::to_string(config.extraParam) + "\n";
                 }
                 commandScript += std::to_string(DISK_RADIAL_DISPERSION) + " " + std::to_string(DISK_TOOMRE_Q) + "\n";
@@ -296,7 +296,6 @@ std::string StarGeneration::getHDF5OutputDir() {
     
     return hdf5Path;
 }
-
 
 bool StarGeneration::pollComplete() {
     if (!processLaunched) return false;

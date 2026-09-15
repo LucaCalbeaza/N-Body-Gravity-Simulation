@@ -25,7 +25,12 @@ public:
 
     bool loadingMAGI = false;
     float sectionSeperation = 0.03f;
-    
+    int previousStartCondition = -1;
+    int previousSecondaryStartCondition = -1;
+    int previoushdf5FileIndex = -1;
+    int previousMass = -1;
+    int previousSize = -1;
+
     // Fonts
     ImFont* titleFont;
     ImFont* sectionFont;
